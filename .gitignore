@@ -34,10 +34,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# media files (prevent large videos/images from filling up git)
-*.mp4
-*.mov
-*.jpg
-*.JPG
-*.png
