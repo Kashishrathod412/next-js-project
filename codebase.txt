@@ -1,0 +1,3522 @@
+===== D:\portfolio website\work\next-portfolio\src\app\work\[slug]\page.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { PROJECTS } from "@/data/projects";
+import { ArrowLeft, Play } from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
+
+interface CaseStudyProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default function CaseStudyPage({ params }: CaseStudyProps) {
+  const project = PROJECTS.find((p) => p.slug === params.slug);
+  const containerRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+  };
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const triggers: ScrollTrigger[] = [];
+
+    // 1. Instant animation on mount for top header details & marker
+    const details = containerRef.current.querySelector(".case-study-details");
+    const marker6 = containerRef.current.querySelector(".scene-6-marker");
+
+    const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+
+    if (marker6) {
+      tl.fromTo(marker6,
+        { opacity: 0, y: 15 },
+        { opacity: 0.35, y: 0, duration: 0.8 }
+      );
+    }
+
+    if (details) {
+      tl.fromTo(details,
+        {
+          y: 20,
+          opacity: 0,
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.4
+        },
+        "-=0.6" // slight stagger overlap
+      );
+    }
+
+    // 2. Scroll-triggered animation for BTS grid further down the page
+    const bts = containerRef.current.querySelector("#bts-grid");
+    if (bts) {
+      const btsTween = gsap.fromTo(bts,
+        {
+          y: 20,
+          opacity: 0
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: bts,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (btsTween.scrollTrigger) triggers.push(btsTween.scrollTrigger);
+    }
+
+    // 3. Scroll-triggered animation for Scene 7 marker
+    const marker7 = containerRef.current.querySelector(".scene-7-marker");
+    if (marker7) {
+      const marker7Tween = gsap.fromTo(marker7,
+        { opacity: 0, y: 15 },
+        {
+          opacity: 0.35,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: bts || containerRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (marker7Tween.scrollTrigger) triggers.push(marker7Tween.scrollTrigger);
+    }
+
+    return () => {
+      triggers.forEach(t => t.kill());
+    };
+  }, [project]);
+
+  if (!project) {
+    notFound();
+  }
+
+  return (
+    <main id="case-study-top" ref={containerRef} className="min-h-screen bg-bg text-text pt-20 sm:pt-24 pb-32 relative overflow-hidden">
+      {/* Subtle Editorial Detail Label */}
+      <div className="absolute top-8 right-8 text-[9px] uppercase tracking-[0.25em] text-muted/20 font-mono z-10 select-none hidden sm:block">
+        ROLL 02
+      </div>
+      <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none hidden sm:block">
+        CUT 003
+      </div>
+
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-12">
+        {/* Back Button */}
+        <div className="mb-8 relative z-50">
+          <Link
+            href="/work"
+            className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-muted hover:text-text transition-colors bg-surface/50 backdrop-blur-sm border border-stroke rounded-full px-4 py-2.5 min-h-[44px] w-fit"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Work
+          </Link>
+        </div>
+        <div className="case-study-details">
+          {/* Screenplay Scene Marker */}
+          <div className="scene-6-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+            <span>SCENE 06</span>
+            <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+            <span>CASE STUDY</span>
+          </div>
+
+          {/* Case Study Header */}
+          <header className="mb-12 md:mb-16">
+            <h1 className="text-[clamp(32px,6vw,72px)] leading-[1.05] tracking-tight font-medium text-text mb-4">
+              {project.name}
+            </h1>
+            <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-xs uppercase tracking-[0.06em] text-faint">
+              <span>{project.category}</span>
+              <span>{project.year}</span>
+              <span>Client: {project.client}</span>
+            </div>
+          </header>
+
+          {/* Hero Video/Image Placeholder */}
+          <div className="w-full aspect-video bg-black border border-stroke rounded-xl overflow-hidden relative mb-16 flex items-center justify-center group">
+            {project.video ? (
+              <video 
+                ref={videoRef}
+                src={project.video}
+                poster={`/posters/${project.slug}.jpg`}
+                playsInline
+                preload="none"
+                controls={isPlaying}
+                className="absolute inset-0 w-full h-full object-contain"
+                onEnded={() => setIsPlaying(false)}
+                onPause={() => setIsPlaying(false)}
+                onPlay={() => setIsPlaying(true)}
+              />
+            ) : (
+              <div className="absolute inset-0" style={{ background: project.pattern }} />
+            )}
+
+            {!isPlaying && (
+              <div 
+                className="absolute inset-0 cursor-pointer flex items-center justify-center z-10"
+                onClick={togglePlay}
+              >
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+                <div className="z-10 bg-white/10 backdrop-blur-md border border-white/20 w-16 h-16 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Play className="w-6 h-6 text-white fill-white ml-1" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-8 md:gap-16 mb-24">
+            {/* Left: Notes */}
+            <div>
+              <h2 className="text-[11px] uppercase tracking-widest text-faint border-b border-stroke pb-2 mb-6">
+                {"Director's Notes"}
+              </h2>
+              <p className="text-[14px] md:text-[15px] leading-relaxed text-muted whitespace-pre-wrap">
+                {project.directorNotes}
+              </p>
+            </div>
+
+            {/* Right: Meta & Gear */}
+            <div className="border-t border-stroke pt-8 md:border-0 md:pt-0">
+              <div className="mb-10">
+                <h2 className="text-[11px] uppercase tracking-widest text-faint border-b border-stroke pb-2 mb-4">
+                  Role
+                </h2>
+                <p className="text-[13px] text-text/80">{project.role}</p>
+              </div>
+
+              <div>
+                <h2 className="text-[11px] uppercase tracking-widest text-faint border-b border-stroke pb-2 mb-4">
+                  Gear Used
+                </h2>
+                <ul className="flex flex-col gap-2">
+                  {project.gear.map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-2.5">
+                      <div className="w-1 h-1 bg-ghost rounded-full" />
+                      <span className="text-[12px] text-muted">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Behind The Scenes Staggered Grid */}
+        <div id="bts-grid">
+          {/* Screenplay Scene Marker */}
+          <div className="scene-7-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+            <span>SCENE 07</span>
+            <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+            <span>BEHIND THE SCENES</span>
+          </div>
+
+          <h2 className="text-[11px] uppercase tracking-widest text-faint border-b border-stroke pb-2 mb-8">
+            Behind The Scenes
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+            <div className="aspect-[4/5] bg-surface border border-stroke rounded-lg relative overflow-hidden">
+               <img src="https://picsum.photos/seed/filmmaking1/800/1000" alt="Behind the scenes 1" className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="aspect-square bg-surface border border-stroke rounded-lg relative overflow-hidden md:mt-8">
+               <img src="https://picsum.photos/seed/filmmaking2/1000/1000" alt="Behind the scenes 2" className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="aspect-video bg-surface border border-stroke rounded-lg relative overflow-hidden md:mt-16 col-span-2 md:col-span-1">
+               <img src="https://picsum.photos/seed/filmmaking3/1200/800" alt="Behind the scenes 3" className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\app\work\page.tsx =====
+"use client";
+
+import Navigation from "@/components/Navigation";
+import WorkSection from "@/components/WorkSection";
+import ReelsSection from "@/components/ReelsSection";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+export default function WorkPage() {
+  return (
+    <>
+      <main className="min-h-screen text-text pt-20 sm:pt-24 pb-32 relative overflow-hidden">
+        <Navigation />
+        <div className="max-w-[1200px] mx-auto relative z-10">
+          <div className="px-4 sm:px-6 md:px-12 mb-[-1rem] md:mb-[-3rem] mt-4 md:mt-2 relative z-40">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-muted hover:text-text transition-colors bg-surface/50 backdrop-blur-sm border border-stroke rounded-full px-4 py-2.5 w-fit min-h-[44px]"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Home
+            </Link>
+          </div>
+          <WorkSection />
+          <ReelsSection />
+        </div>
+      </main>
+    </>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\app\layout.tsx =====
+import type { Metadata } from "next";
+import { Inter, Instrument_Serif } from "next/font/google";
+import TimelineHUD from "@/components/TimelineHUD";
+import GlobalSweep from "@/components/GlobalSweep";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import SmoothScrolling from "@/components/SmoothScrolling";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const instrument = Instrument_Serif({ 
+  weight: "400", 
+  subsets: ["latin"],
+  variable: "--font-instrument" 
+});
+
+export const metadata: Metadata = {
+  title: "Videographer & Editor Portfolio",
+  description: "Frames that move people.",
+};
+
+export const viewport = {
+  themeColor: "#0A0A0A",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" data-theme="dark">
+      <body className={`${inter.variable} ${instrument.variable} bg-bg text-text antialiased`}>
+        <TimelineHUD />
+        <GlobalSweep />
+        <div className="relative z-10 pb-20 md:pb-32">
+          <SmoothScrolling>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </SmoothScrolling>
+        </div>
+      </body>
+    </html>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\app\loading.tsx =====
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
+export default function Loading() {
+  const [visible, setVisible] = useState(false);
+
+  // Only show loader if page takes > 300ms — avoids flash on fast loads
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 bg-bg flex flex-col items-center justify-center pointer-events-none select-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-muted">
+          <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+          <span>LOADING SEQUENCE</span>
+        </div>
+
+        {/* Top-of-page progress bar — feels instant, not bouncy */}
+        <div className="fixed top-0 left-0 w-full h-[2px] bg-stroke overflow-hidden">
+          <motion.div
+            className="h-full bg-purple-500 origin-left"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 0.85 }}
+            transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\app\page.tsx =====
+"use client";
+
+import { useState, useEffect } from "react";
+import LoadingScreen from "@/components/LoadingScreen";
+import Navigation from "@/components/Navigation";
+import HeroSection from "@/components/HeroSection";
+import AboutSection from "@/components/AboutSection";
+import FeaturedReelsSection from "@/components/FeaturedReelsSection";
+import ServicesSection from "@/components/ServicesSection";
+import GearSection from "@/components/GearSection";
+import ContactSection from "@/components/ContactSection";
+
+export default function Home() {
+  const [loadingComplete, setLoadingComplete] = useState(false);
+
+  useEffect(() => {
+    const seen = sessionStorage.getItem("loadingSeen");
+    if (seen) {
+      setLoadingComplete(true);
+    }
+  }, []);
+
+  const handleLoadingComplete = () => {
+    sessionStorage.setItem("loadingSeen", "true");
+    setLoadingComplete(true);
+  };
+
+  // Lock body scroll while loading
+  useEffect(() => {
+    if (!loadingComplete) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [loadingComplete]);
+
+  return (
+    <>
+      {!loadingComplete && (
+        <LoadingScreen onComplete={handleLoadingComplete} />
+      )}
+
+      {/* Main Content only mounts/starts animating after loading completes to allow GSAP staggered entrances to run properly */}
+      {loadingComplete && (
+        <>
+          <main>
+            <Navigation />
+            <HeroSection />
+            <FeaturedReelsSection />
+            <AboutSection />
+            <ServicesSection />
+            <GearSection />
+            <ContactSection />
+          </main>
+        </>
+      )}
+    </>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\app\template.tsx =====
+"use client";
+
+import { motion } from "framer-motion";
+
+export default function Template({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\AboutSection.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { 
+  Camera, 
+  Scissors, 
+  Palette, 
+  AudioWaveform, 
+  Plane, 
+  Aperture 
+} from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const STATS = [
+  { value: "120+", label: "Projects" },
+  { value: "14", label: "Countries" },
+  { value: "6", label: "Years" },
+  { value: "3", label: "Awards" },
+];
+
+const SKILLS = [
+  { name: "Cinematography", icon: Camera },
+  { name: "Editing", icon: Scissors },
+  { name: "Colour grade", icon: Palette },
+  { name: "Sound design", icon: AudioWaveform },
+  { name: "Aerial & drone", icon: Plane },
+  { name: "Photography", icon: Aperture },
+];
+
+export default function AboutSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+  }, []);
+
+  // Parallax setup
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+
+    const triggers: ScrollTrigger[] = [];
+
+    const contentDiv = sectionRef.current.querySelector('.about-content');
+    if (contentDiv) {
+      gsap.set(contentDiv, { willChange: "filter, transform" });
+      const contentTween = gsap.fromTo(contentDiv,
+        { 
+          y: 30, 
+          opacity: 0.7, 
+          filter: "blur(8px)" 
+        },
+        {
+          y: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 1.0,
+          ease: "power2.out",
+          onComplete: () => { (contentDiv as HTMLElement).style.willChange = "auto"; },
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 75%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (contentTween.scrollTrigger) triggers.push(contentTween.scrollTrigger);
+    }
+
+    const markerDiv = sectionRef.current.querySelector('.scene-marker');
+    if (markerDiv) {
+      const markerTween = gsap.fromTo(markerDiv,
+        { opacity: 0, y: 15 },
+        {
+          opacity: 0.35,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (markerTween.scrollTrigger) triggers.push(markerTween.scrollTrigger);
+    }
+
+    return () => { triggers.forEach(t => t.kill()); };
+  }, []);
+
+  return (
+    <section id="about" ref={sectionRef} className="py-16 px-4 sm:px-6 md:px-12 relative overflow-hidden">
+      
+      {/* Editorial Easter Egg */}
+      <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none">
+        CUT 001 // TAKE 03
+      </div>
+      
+      {/* Parallax Background Photo Placeholder */}
+      <motion.div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-5 grayscale"
+        style={isMobile ? {} : { y }}
+      >
+        <div className="w-full h-[140%] absolute top-[-20%] left-0">
+          <img 
+            src="/bts-bg.png" 
+            alt="BTS Background" 
+            className="w-full h-full object-cover" 
+          />
+        </div>
+      </motion.div>
+
+      <div className="about-content grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[320px_1fr] gap-12 lg:gap-20 items-center relative z-10 max-w-[1200px] mx-auto">
+        
+        {/* Left Column: Profile Photo */}
+        <div className="w-full aspect-[4/5] border border-stroke rounded-2xl relative overflow-hidden group">
+          <img 
+            src="/IMG_9195.JPG" 
+            alt="My Profile" 
+            className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+          />
+        </div>
+
+
+        {/* Right Column: Content */}
+        <div>
+          {/* Screenplay Scene Marker */}
+          <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+            <span>SCENE 02</span>
+            <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+            <span>THE STORY</span>
+          </div>
+
+          <p className="text-[10px] uppercase tracking-[0.12em] text-faint mb-4">
+            About me
+          </p>
+          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-text/90 mb-6">
+            6 years behind the{" "}
+            <em className="font-display italic text-text font-normal">lens.</em>
+          </h2>
+          <p className="text-[14px] text-muted leading-relaxed max-w-lg mb-10">
+            I shoot and edit films for brands, couples, and artists — obsessing over light, pacing, and the moments between moments. Based in New York, working worldwide.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-full mb-12">
+            {STATS.map((stat, i) => (
+              <div key={i} className="border-t border-stroke pt-3">
+                <div className="text-3xl sm:text-4xl font-medium text-text">
+                  {stat.value}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-faint mt-1">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {SKILLS.map((skill, i) => {
+              const Icon = skill.icon;
+              return (
+                <div
+                  key={i}
+                  className="bg-surface/80 backdrop-blur-sm border border-stroke rounded-md px-3 h-8 text-xs text-muted flex items-center gap-3"
+                >
+                  <Icon className="w-[14px] h-[14px] text-faint" />
+                  {skill.name}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\CanvasParticles.tsx =====
+"use client";
+
+import { useEffect, useRef } from "react";
+
+export default function CanvasParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
+
+    const isMobile = window.innerWidth < 640;
+    const PARTICLE_COUNT = isMobile ? 20 : 80;
+    const particles = Array.from({ length: PARTICLE_COUNT }).map(() => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: 0.2 + Math.random() * 1.5,
+      a: 0.02 + Math.random() * 0.15,
+      isDust: Math.random() > 0.8
+    }));
+
+    const mouse = { x: w / 2, y: h / 2 };
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    const resizeObserver = new ResizeObserver(() => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+    resizeObserver.observe(document.body);
+
+    let animationId: number;
+
+    const render = () => {
+      ctx.clearRect(0, 0, w, h);
+
+      particles.forEach((p) => {
+        p.x += p.vx + (mouse.x - w/2) * 0.00005;
+        p.y += p.vy + (mouse.y - h/2) * 0.00005;
+
+        if (p.x < 0) p.x = w;
+        if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h;
+        if (p.y > h) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.isDust ? `rgba(139, 92, 246, ${p.a})` : `rgba(255, 255, 255, ${p.a})`;
+        ctx.fill();
+      });
+
+      const gradient = ctx.createRadialGradient(
+        mouse.x, mouse.y, 0,
+        mouse.x, mouse.y, 250
+      );
+      gradient.addColorStop(0, "rgba(255,255,255,0.04)");
+      gradient.addColorStop(1, "transparent");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
+
+      animationId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      resizeObserver.disconnect();
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-[2] pointer-events-none" style={{ transform: "translateZ(0)" }} />;
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\ContactSection.tsx =====
+"use client";
+
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Send } from "lucide-react";
+import emailjs from '@emailjs/browser';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function ContactSection() {
+  const containerRef = useRef<HTMLElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await emailjs.sendForm(
+      'YOUR_SERVICE_ID',
+      'YOUR_TEMPLATE_ID', 
+      e.target as HTMLFormElement,
+      'YOUR_PUBLIC_KEY'
+    );
+    // show success state
+  };
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const triggers: ScrollTrigger[] = [];
+
+    // Focus pull + fade in on contact contents
+    const content = containerRef.current.querySelector(".contact-content");
+    if (content) {
+      gsap.set(content, { willChange: "filter, transform" });
+      const contentTween = gsap.fromTo(content,
+        {
+          y: 30,
+          opacity: 0.7,
+          filter: "blur(8px)"
+        },
+        {
+          y: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 1.2,
+          ease: "power2.out",
+          onComplete: () => { (content as HTMLElement).style.willChange = "auto"; },
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 75%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (contentTween.scrollTrigger) triggers.push(contentTween.scrollTrigger);
+    }
+
+    // Fade in scene marker
+    const marker = containerRef.current.querySelector(".scene-marker");
+    if (marker) {
+      const markerTween = gsap.fromTo(marker,
+        { opacity: 0, y: 15 },
+        {
+          opacity: 0.35,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (markerTween.scrollTrigger) triggers.push(markerTween.scrollTrigger);
+    }
+
+    return () => { triggers.forEach(t => t.kill()); };
+  }, []);
+
+  return (
+    <section id="contact" ref={containerRef} className="py-24 px-4 sm:px-6 md:px-12 border-t border-stroke relative">
+      <div className="relative z-10 max-w-[1200px] mx-auto contact-content">
+        {/* Screenplay Scene Marker */}
+        <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+          <span>SCENE 05</span>
+          <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+          <span>CONTACT</span>
+        </div>
+
+        <div className="mb-10">
+          <h2 className="text-[clamp(28px,5vw,52px)] font-medium text-text tracking-tight mb-2">
+            {"Let's"} make something{" "}
+            <em className="font-display italic text-text">real.</em>
+          </h2>
+          <p className="text-[14px] text-muted">
+            Available from October 2026 onwards.
+          </p>
+        </div>
+
+        <form className="flex flex-col" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+            {/* Name */}
+            <div className="bg-surface border border-stroke rounded-lg px-4 py-3.5 hover:border-white/15 focus-within:border-white/25 transition-colors">
+              <label className="block text-[10px] uppercase text-faint mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="bg-surface border border-stroke rounded-lg px-4 py-3.5 hover:border-white/15 focus-within:border-white/25 transition-colors">
+              <label className="block text-[10px] uppercase text-faint mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="john@example.com"
+                className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
+              />
+            </div>
+          </div>
+
+          {/* Project Type */}
+          <div className="bg-surface border border-stroke rounded-lg px-4 py-3.5 mb-2 hover:border-white/15 focus-within:border-white/25 transition-colors">
+            <label className="block text-[10px] uppercase text-faint mb-1">
+              Project type
+            </label>
+            <input
+              type="text"
+              placeholder="Commercial, Wedding, Music Video..."
+              className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
+            />
+          </div>
+
+          {/* Message */}
+          <div className="bg-surface border border-stroke rounded-lg px-4 py-3.5 hover:border-white/15 focus-within:border-white/25 transition-colors mb-4">
+            <label className="block text-[10px] uppercase text-faint mb-1">
+              Message
+            </label>
+            <textarea
+              placeholder="Tell me about your vision..."
+              className="bg-transparent text-text/70 text-[13px] outline-none w-full min-h-[80px] sm:min-h-[96px] placeholder:text-ghost resize-y"
+            />
+          </div>
+
+          {/* CTA Button */}
+          <div>
+            <button
+              type="submit"
+              className="bg-white text-bg text-xs uppercase tracking-[0.06em] font-medium px-6 py-3.5 rounded-lg mt-1 inline-flex justify-center items-center gap-2.5 hover:opacity-[0.88] transition-opacity w-full sm:w-auto"
+            >
+              <Send className="w-[14px] h-[14px]" />
+              Send enquiry
+            </button>
+          </div>
+        </form>
+
+        <div className="border-t border-stroke mt-16 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-5 flex-wrap justify-center">
+            {["Instagram", "Vimeo", "YouTube", "LinkedIn"].map((link) => (
+              <a
+                key={link}
+                href="#"
+                className="text-[11px] uppercase text-faint hover:text-text transition-colors"
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+          <div className="text-[10px] text-ghost flex items-center gap-4">
+            <span className="opacity-15 font-mono text-[8px] tracking-wider select-none pointer-events-none">CUT 002 // SEQ C</span>
+            <span>© 2026 Dhruvil Naidu</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\CursorGlow.tsx =====
+"use client";
+
+import { useEffect } from "react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
+
+export default function CursorGlow() {
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+
+  useEffect(() => {
+    const moveCursor = (e: MouseEvent) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+    };
+    window.addEventListener("mousemove", moveCursor);
+    return () => window.removeEventListener("mousemove", moveCursor);
+  }, [cursorX, cursorY]);
+
+  const glowX = useTransform(cursorX, (val) => val - 64);
+  const glowY = useTransform(cursorY, (val) => val - 64);
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 w-32 h-32 rounded-full bg-[#8b5cf6] opacity-30 blur-[40px] pointer-events-none z-[9999]"
+      style={{
+        x: glowX,
+        y: glowY,
+      }}
+    />
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\ErrorBoundary.tsx =====
+"use client";
+
+import React, { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props {
+  children?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export default class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 z-[99999] bg-black text-red-500 p-10 overflow-auto font-mono text-sm">
+          <h1 className="text-2xl mb-4 font-bold">Something went wrong!</h1>
+          <pre>{this.state.error?.message}</pre>
+          <pre className="mt-4 opacity-50">{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\FeaturedReelsSection.tsx =====
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { PROJECTS } from "@/data/projects";
+import { Play } from "lucide-react";
+
+// Register ScrollTrigger
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
+// Slice the first 3 for featured
+const FEATURED = PROJECTS.slice(0, 3);
+
+export default function FeaturedReelsSection() {
+  const containerRef = useRef<HTMLElement>(null);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const items = containerRef.current.querySelectorAll(".featured-item");
+    
+    // Create an array to track triggers
+    const triggers: ScrollTrigger[] = [];
+
+    items.forEach((item, index) => {
+      const isEven = index % 2 === 0;
+      const media = item.querySelector(".featured-media");
+      const content = item.querySelector(".featured-content");
+
+      if (media && content) {
+        // Media slides in from the side it belongs to
+        const st1 = ScrollTrigger.create({
+          trigger: item,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+          animation: gsap.fromTo(media, 
+            { x: isEven ? -50 : 50, opacity: 0, scale: 0.95 },
+            { x: 0, opacity: 1, scale: 1, duration: 1, ease: "power3.out" }
+          )
+        });
+        triggers.push(st1);
+
+        // Content fades up
+        const st2 = ScrollTrigger.create({
+          trigger: item,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+          animation: gsap.fromTo(content,
+            { y: 50, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.2 }
+          )
+        });
+        triggers.push(st2);
+      }
+    });
+
+    return () => {
+      triggers.forEach(t => t.kill());
+    };
+  }, []);
+
+  return (
+    <section ref={containerRef} className="py-32 px-6 md:px-12 bg-bg border-t border-white/5 relative overflow-hidden">
+      <div className="max-w-[1440px] mx-auto">
+        <div className="mb-20 text-center">
+          <h2 className="text-[10px] uppercase tracking-[0.2em] text-muted mb-4">Selected Works</h2>
+          <h3 className="text-4xl md:text-6xl font-medium tracking-tight">Featured Reels</h3>
+        </div>
+
+        <div className="flex flex-col gap-32">
+          {FEATURED.map((project, index) => {
+            const isEven = index % 2 === 0;
+            const isHovered = hoveredId === project.id;
+            
+            return (
+              <div 
+                key={project.id} 
+                className={`featured-item flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-12 lg:gap-24 items-center`}
+              >
+                {/* Media Side */}
+                <div 
+                  className="featured-media w-full lg:w-[55%] relative aspect-video rounded-[32px] overflow-hidden cursor-pointer border border-white/10 group shadow-2xl"
+                  onMouseEnter={() => {
+                    setHoveredId(project.id);
+                    const v = videoRefs.current[project.id];
+                    if (v) { v.currentTime = 0; v.play().catch(() => {}); }
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredId(null);
+                    const v = videoRefs.current[project.id];
+                    if (v) { v.pause(); }
+                  }}
+                >
+                  <div className="absolute inset-0" style={{ background: project.pattern, opacity: 0.5 }} />
+                  
+                  {project.video && (
+                    <video
+                      ref={el => { if (el) videoRefs.current[project.id] = el; }}
+                      src={project.video}
+                      muted
+                      loop
+                      playsInline
+                      className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${isHovered ? 'opacity-100 scale-100' : 'opacity-60 scale-105'}`}
+                    />
+                  )}
+
+                  {/* Play Button Overlay */}
+                  <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 z-20 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 scale-90 group-hover:scale-100 transition-transform duration-500 z-10">
+                      <Play className="w-8 h-8 text-white fill-white ml-2 drop-shadow-lg" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Side */}
+                <div className="featured-content w-full lg:w-[45%] flex flex-col items-start">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#8b5cf6] mb-4 font-medium">
+                    {project.category}
+                  </div>
+                  <h4 className="text-4xl md:text-5xl font-medium mb-6 leading-tight tracking-tight">
+                    {project.name}
+                  </h4>
+                  
+                  <div className="grid grid-cols-2 gap-8 w-full border-y border-white/10 py-6 mb-8">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted mb-2">Client</div>
+                      <div className="text-sm font-medium text-white/90">{project.client}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted mb-2">Project Type</div>
+                      <div className="text-sm font-medium text-white/90">{project.role}</div>
+                    </div>
+                  </div>
+
+                  <p className="text-muted leading-relaxed text-sm md:text-base mb-10">
+                    {project.directorNotes}
+                  </p>
+
+                  <button className="bg-white/5 border border-white/10 text-white text-xs uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:bg-white hover:text-black hover:scale-105 transition-all shadow-lg font-medium">
+                    Watch Reel
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\GearSection.tsx =====
+"use client";
+
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const GEAR = [
+  {
+    title: "Cameras",
+    items: ["Sony FX3", "Sony A7 IV", "DJI Pocket 3", "GoPro Hero 12"],
+  },
+  {
+    title: "Lenses",
+    items: [
+      "Sony 24–70 f/2.8",
+      "Sony 85mm f/1.4",
+      "Sigma 18–35 f/1.8",
+      "Voigtländer 40mm",
+    ],
+  },
+  {
+    title: "Support & post",
+    items: [
+      "DJI RS 3 Pro",
+      "DJI Mini 4 Pro",
+      "DaVinci Resolve",
+      "Adobe Premiere Pro",
+    ],
+  },
+];
+
+export default function GearSection() {
+  const containerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const triggers: ScrollTrigger[] = [];
+
+    // Focus pull + fade in on gear grid
+    const content = containerRef.current.querySelector(".gear-content");
+    if (content) {
+      gsap.set(content, { willChange: "filter, transform" });
+      const contentTween = gsap.fromTo(content,
+        {
+          y: 30,
+          opacity: 0.7,
+          filter: "blur(8px)"
+        },
+        {
+          y: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 1.0,
+          ease: "power2.out",
+          onComplete: () => { (content as HTMLElement).style.willChange = "auto"; },
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 75%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (contentTween.scrollTrigger) triggers.push(contentTween.scrollTrigger);
+    }
+
+    // Fade in scene marker
+    const marker = containerRef.current.querySelector(".scene-marker");
+    if (marker) {
+      const markerTween = gsap.fromTo(marker,
+        { opacity: 0, y: 15 },
+        {
+          opacity: 0.35,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (markerTween.scrollTrigger) triggers.push(markerTween.scrollTrigger);
+    }
+
+    return () => { triggers.forEach(t => t.kill()); };
+  }, []);
+
+  return (
+    <section id="gear" ref={containerRef} className="py-16 px-4 sm:px-6 md:px-12 border-t border-stroke relative overflow-hidden">
+      
+      {/* Editorial Easter Egg */}
+      <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none">
+        ROLL 04
+      </div>
+
+      <div className="relative z-10 max-w-[1200px] mx-auto gear-content">
+        {/* Screenplay Scene Marker */}
+        <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-white select-none">
+          <span>SCENE 04</span>
+          <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+          <span>EQUIPMENT</span>
+        </div>
+
+        <div className="flex justify-between items-baseline mb-10">
+          <h2 className="text-[11px] font-medium uppercase tracking-[0.1em] text-white">
+            Gear list
+          </h2>
+          <span className="text-[10px] text-white">My kit</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-3">
+          {GEAR.map((group) => (
+            <div key={group.title}>
+              <h3 className="text-[11px] uppercase tracking-wider sm:tracking-widest text-white border-b border-stroke pb-2 mb-3">
+                {group.title}
+              </h3>
+              <ul className="flex flex-col">
+                {group.items.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2.5 py-2 border-b border-stroke/50 last:border-0"
+                  >
+                    <div className="w-[4px] h-[4px] bg-white rounded-full shrink-0" />
+                    <span className="text-[12px] text-white drop-shadow-md">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\GlobalSweep.tsx =====
+"use client";
+
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+
+export default function GlobalSweep() {
+  const sweepRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sweepRef.current) return;
+    const layers = sweepRef.current.querySelectorAll('.sweep-layer');
+    
+    gsap.fromTo(layers,
+      { x: "-20vw" },
+      {
+        x: "120vw",
+        duration: 18,
+        ease: "none",
+        repeat: -1,
+        stagger: 0.8
+      }
+    );
+
+    return () => {
+      gsap.killTweensOf(layers);
+      Array.from(layers).forEach(l => ((l as HTMLElement).style.willChange = "auto"));
+    };
+  }, []);
+
+  return (
+    <div ref={sweepRef} className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none flex items-center justify-center mix-blend-screen">
+      {/* Layer 1: Very large */}
+      <div className="sweep-layer absolute top-[-50vh] left-[-50vw] w-[80vw] h-[200vh] rotate-[25deg] bg-[rgba(139,92,246,0.08)] blur-[120px]" style={{ willChange: "transform" }} />
+      {/* Layer 2: Medium */}
+      <div className="sweep-layer absolute top-[-50vh] left-[-50vw] w-[50vw] h-[200vh] rotate-[25deg] bg-[rgba(168,85,247,0.15)] blur-[80px]" style={{ willChange: "transform" }} />
+      {/* Layer 3: Smaller */}
+      <div className="sweep-layer absolute top-[-50vh] left-[-50vw] w-[25vw] h-[200vh] rotate-[25deg] bg-[rgba(196,181,253,0.20)] blur-[40px]" style={{ willChange: "transform" }} />
+    </div>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\HeroSection.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { Play, X, Volume2, VolumeX, Maximize } from "lucide-react";
+import { REELS } from "@/data/projects";
+
+const CanvasParticles = dynamic(() => import("./CanvasParticles"), { ssr: false });
+const CursorGlow = dynamic(() => import("./CursorGlow"), { ssr: false });
+
+// Magnetic Button Component
+function MagneticButton({ children, className, onClick }: any) {
+  const ref = useRef<HTMLDivElement>(null);
+  const boundsRef = useRef<{left: number, top: number, width: number, height: number} | null>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const springConfig = { damping: 15, stiffness: 150, mass: 0.1 };
+  const springX = useSpring(x, springConfig);
+  const springY = useSpring(y, springConfig);
+
+  const handleMouseEnter = () => {
+    if (ref.current) {
+      boundsRef.current = ref.current.getBoundingClientRect();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!boundsRef.current) return;
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = boundsRef.current;
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    x.set((clientX - centerX) * 0.3);
+    y.set((clientY - centerY) * 0.3);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+    boundsRef.current = null;
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
+      className="inline-block relative"
+      onClick={onClick}
+    >
+      <div className={className}>{children}</div>
+    </motion.div>
+  );
+}
+
+// Stats Counter Component
+function AnimatedStat({ target, suffix, label }: { target: number, suffix: string, label: string }) {
+  return (
+    <div className="hero-stat-item opacity-0 translate-y-4">
+      <div className="text-2xl md:text-3xl font-medium text-text mb-1 tracking-tight flex items-baseline">
+        <span>{target}</span>
+        <span>{suffix}</span>
+      </div>
+      <div className="text-[10px] uppercase tracking-wider text-muted max-w-[90px] leading-snug">{label}</div>
+    </div>
+  );
+}
+
+const CATEGORIES = ["ALL", "COMMERCIAL", "FASHION", "PRODUCT", "SOCIAL", "TRAVEL"];
+
+export default function HeroSection() {
+  const containerRef = useRef<HTMLElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState("ALL");
+  const [isMuted, setIsMuted] = useState(true);
+  const [isSpread, setIsSpread] = useState(false);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Filter reels
+  const filteredReels = REELS.filter(r => activeCategory === "ALL" || r.category.toUpperCase().includes(activeCategory)).slice(0, 5);
+
+  // Mouse Parallax for 3D Stack
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 40, stiffness: 150 };
+  const springX = useSpring(mouseX, springConfig);
+  const springY = useSpring(mouseY, springConfig);
+
+  const rotateX = useTransform(springY, [-500, 500], [8, -8]);
+  const rotateY = useTransform(springX, [-500, 500], [-8, 8]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const { innerWidth, innerHeight } = window;
+      mouseX.set(e.clientX - innerWidth / 2);
+      mouseY.set(e.clientY - innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
+
+  // Video playback control
+  useEffect(() => {
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+      if (index === activeCardIndex) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [activeCardIndex]);
+
+  // GSAP Entry
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const content = containerRef.current.querySelector(".hero-content-left");
+    const words = containerRef.current.querySelectorAll(".hero-word");
+    const stats = containerRef.current.querySelectorAll(".hero-stat-item");
+    const btns = containerRef.current.querySelectorAll(".hero-btn-container");
+
+    const tl = gsap.timeline({ delay: 0.4 });
+
+    if (content) tl.to(content, { filter: "blur(0px)", opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
+    if (words.length) tl.to(words, { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", stagger: 0.1 }, "-=0.5");
+    if (btns.length) tl.fromTo(btns, 
+      { y: 24, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", stagger: 0.1 }, 
+      "-=0.5"
+    );
+    if (stats.length) tl.to(stats, { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", stagger: 0.1 }, "-=0.5");
+
+    return () => { tl.kill(); };
+  }, []);
+
+  return (
+    <>
+      <CursorGlow />
+      <section
+        id="hero"
+        ref={containerRef}
+        className="relative min-h-[100dvh] w-full overflow-hidden bg-bg pt-28 md:pt-32 lg:pt-36 pb-24"
+      >
+
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-bg via-bg/80 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-transparent via-transparent to-bg pointer-events-none" />
+        
+        {/* Depth Layers / Glows */}
+        <motion.div 
+          style={{ x: useTransform(mouseX, [-500, 500], [-20, 20]), y: useTransform(mouseY, [-500, 500], [-20, 20]) }}
+          className="absolute top-[10%] right-[15%] w-[500px] h-[500px] bg-[#8b5cf6] blur-[120px] opacity-10 rounded-full pointer-events-none z-[1]" 
+        />
+        <motion.div 
+          style={{ x: useTransform(mouseX, [-500, 500], [30, -30]), y: useTransform(mouseY, [-500, 500], [30, -30]) }}
+          className="absolute bottom-[10%] left-[20%] w-[600px] h-[400px] bg-[#8b5cf6] blur-[140px] opacity-[0.08] rounded-full pointer-events-none z-[1]" 
+        />
+
+        <CanvasParticles />
+
+        {/* Film Grain */}
+        <div 
+          className="absolute inset-0 z-[3] opacity-[0.05] pointer-events-none mix-blend-overlay"
+          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+        />
+
+        {/* Active state dimmer */}
+        <AnimatePresence>
+          {(activeCardIndex !== null || isSpread) && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className="absolute inset-0 bg-black/90 z-[40]"
+              onClick={() => { setActiveCardIndex(null); setIsSpread(false); }}
+            />
+          )}
+        </AnimatePresence>
+
+        <div className="relative max-w-[1440px] mx-auto w-full px-6 md:px-12 flex flex-col lg:flex-row items-center">
+          
+          {/* LEFT SIDE (40%) */}
+          <div 
+            className="hero-content-left w-full lg:w-[45%] flex flex-col justify-center pt-8 lg:pt-0 z-20 pointer-events-none"
+            style={{ filter: "blur(8px)", opacity: 0, willChange: "filter, opacity" }}
+          >
+            <div className="hero-word text-[10px] uppercase tracking-[0.2em] text-muted mb-6 inline-block translate-y-4 opacity-0 font-medium">
+              Videographer & Editor
+            </div>
+
+            <h1 className="text-[clamp(44px,6vw,84px)] font-medium leading-[1.0] tracking-tight mb-8">
+              <div className="overflow-hidden">
+                <span className="hero-word inline-block opacity-0 translate-y-8 text-text">
+                  Frames that
+                </span>
+              </div>
+              <div className="overflow-hidden">
+                <span className="hero-word inline-block opacity-0 translate-y-8 font-display italic text-text/80 pr-4">
+                  move people.
+                </span>
+              </div>
+            </h1>
+
+            <div className="overflow-hidden mb-12">
+              <p className="hero-word text-sm md:text-base text-muted max-w-[85%] leading-relaxed opacity-0 translate-y-6">
+                Crafting cinematic stories for brands, creators, and businesses.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-16 lg:mb-20 pointer-events-auto">
+              <div className="hero-btn-container opacity-0">
+                <MagneticButton>
+                  <div className="bg-white text-black text-[12px] font-semibold uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:scale-105 hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-white/10">
+                    Watch Showreel <span className="text-[14px]">→</span>
+                  </div>
+                </MagneticButton>
+              </div>
+              
+              <div className="hero-btn-container opacity-0">
+                <MagneticButton>
+                  <Link href="/work" className="border border-white/15 bg-white/5 backdrop-blur-md text-text text-[12px] font-medium uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:bg-white/10 hover:border-white/30 transition-all flex items-center justify-center cursor-pointer">
+                    View Projects
+                  </Link>
+                </MagneticButton>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-8 sm:gap-12 pointer-events-auto">
+              <AnimatedStat target={120} suffix="+" label="Projects Delivered" />
+              <AnimatedStat target={15} suffix="M+" label="Views Generated" />
+              <AnimatedStat target={5} suffix="+" label="Years Experience" />
+            </div>
+          </div>
+
+          {/* RIGHT SIDE (60%) - Floating Deck & Filters */}
+          <div className="w-full lg:w-[55%] min-h-[550px] md:min-h-[650px] mt-16 lg:mt-8 relative flex flex-col items-center justify-center perspective-[1200px] z-[50]">
+            
+
+
+            <motion.div 
+              style={{ rotateX, rotateY, willChange: "transform" }}
+              className="relative w-full max-w-[240px] sm:max-w-[280px] aspect-[9/16] preserve-3d"
+            >
+              <AnimatePresence>
+                {filteredReels.map((reel, index) => {
+                  const isActive = activeCardIndex === index;
+                  const isHovered = hoveredCardIndex === index;
+                  const isAnotherActive = activeCardIndex !== null && !isActive;
+                  
+                  // Stack positioning
+                  const stackDepth = index * 45;
+                  const stackY = index * 25;
+                  const stackScale = 1 - (index * 0.05);
+
+                  // Spread positioning
+                  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+                  const spreadX = (index - 2) * (isMobile ? 70 : 160); // Spread horizontally tighter on mobile
+                  const spreadY = Math.abs(index - 2) * (isMobile ? 12 : 20); // Arc shape
+                  const spreadRotate = (index - 2) * (isMobile ? 5 : 8); // Fan rotation
+                  const spreadZ = index * 10;
+
+                  return (
+                    <motion.div
+                      key={reel.id}
+                      className={`absolute inset-0 rounded-[28px] overflow-hidden cursor-pointer shadow-2xl transition-colors duration-300`}
+                      style={{
+                        background: "rgba(20, 20, 20, 0.95)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        zIndex: isActive ? 100 : isSpread ? 60 + index : 50 - index,
+                        willChange: "transform, filter",
+                      }}
+                      initial={{ opacity: 0, y: 150, scale: 0.8, rotateZ: (index % 2 === 0 ? 4 : -4) }}
+                      animate={{ 
+                        opacity: isAnotherActive ? 0 : 1,
+                        z: isActive ? 300 : isSpread ? spreadZ : -stackDepth,
+                        y: isActive ? 0 : isSpread ? spreadY : stackY,
+                        x: isActive ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? "-25vw" : "0%") : isSpread ? spreadX : 0,
+                        scale: isActive ? 1.2 : isHovered && !isSpread ? stackScale * 1.05 : isSpread ? 0.9 : stackScale,
+                        rotateZ: isActive ? 0 : isSpread ? spreadRotate : index % 2 === 0 ? 2 : -2,
+                        filter: isAnotherActive ? 'blur(10px) brightness(0.4)' : isHovered ? 'brightness(1.2)' : 'brightness(1)',
+                      }}
+                      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 120, 
+                        damping: 18,
+                        mass: 1.2,
+                        opacity: { duration: 0.3 },
+                        delay: isActive ? 0 : index * 0.05 
+                      }}
+                      onMouseEnter={() => setHoveredCardIndex(index)}
+                      onMouseLeave={() => setHoveredCardIndex(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isSpread && activeCardIndex === null) {
+                          setIsSpread(true);
+                        } else if (isSpread && !isActive) {
+                          setActiveCardIndex(index);
+                          const video = videoRefs.current[index];
+                          if (video) video.play().catch(console.error);
+                          
+                          // Pause others
+                          videoRefs.current.forEach((v, i) => {
+                            if (i !== index && v) v.pause();
+                          });
+                        }
+                      }}
+                    >
+                      <div className="absolute inset-0" style={{ background: reel.pattern, opacity: 0.4 }} />
+                      
+                      {isMounted && reel.video && (
+                        <video
+                          ref={el => { videoRefs.current[index] = el; }}
+                          src={reel.video}
+                          poster={reel.poster}
+                          preload="none"
+                          autoPlay={isActive}
+                          loop
+                          muted={isActive ? isMuted : true}
+                          playsInline
+                          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${isActive ? 'opacity-100 scale-100' : 'opacity-50 scale-105'}`}
+                        />
+                      )}
+
+                      <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-500 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+
+                      {/* Card UI Overlay (Thumbnail) */}
+                      {!isActive && (
+                        <div className="absolute inset-0 p-6 flex flex-col justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                              <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+                            </div>
+                            <span className="text-white/90 text-xs font-medium tracking-wide drop-shadow-md">
+                              {reel.name}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-white font-medium text-lg mb-1 leading-tight drop-shadow-md">{reel.category}</h3>
+                            <p className="text-white/60 text-[10px] uppercase tracking-wider">
+                              0:45 • Cinematic Edit
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Active Video Controls & Close */}
+                      {isActive && (
+                        <>
+                          <div 
+                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center cursor-pointer hover:bg-black/80 z-[60] text-white transition-colors border border-white/10"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setActiveCardIndex(null); 
+                              const video = videoRefs.current[index];
+                              if (video) video.pause();
+                            }}
+                          >
+                            <X className="w-5 h-5" />
+                          </div>
+                          
+                          {/* Control Bar */}
+                          <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex items-center justify-between z-[60]"
+                               onClick={(e) => e.stopPropagation()}>
+                            <div>
+                              <div className="text-white font-medium text-sm">{reel.name}</div>
+                              <div className="text-white/60 text-[10px] uppercase tracking-widest mt-0.5">{reel.category}</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                                className="text-white/80 hover:text-white transition-colors"
+                              >
+                                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                              </button>
+                              <button className="text-white/80 hover:text-white transition-colors cursor-not-allowed">
+                                <Maximize className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Outer Glow */}
+                      {isHovered && !isActive && (
+                        <div className="absolute -inset-4 bg-[#8b5cf6] opacity-20 blur-2xl -z-10 rounded-full pointer-events-none" />
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\LoadingScreen.tsx =====
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const WORDS = ["Shoot.", "Cut.", "Deliver."];
+
+interface LoadingScreenProps {
+  onComplete: () => void;
+}
+
+export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
+  const [currentWord, setCurrentWord] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    // Word rotation logic (every 900ms)
+    const wordInterval = setInterval(() => {
+      setCurrentWord((prev) => (prev < 2 ? prev + 1 : 2));
+    }, 900);
+
+    // Progress bar and counter logic over 2.8s
+    const startTime = performance.now();
+    const duration = 2800;
+
+    let animationFrameId: number;
+    const updateProgress = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const nextProgress = Math.min((elapsed / duration) * 100, 100);
+      setProgress(nextProgress);
+
+      if (nextProgress < 100) {
+        animationFrameId = requestAnimationFrame(updateProgress);
+      } else {
+        setTimeout(() => {
+          onComplete();
+        }, 300);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(updateProgress);
+
+    return () => {
+      clearInterval(wordInterval);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [onComplete]);
+
+  // Format progress to be exactly 3 digits
+  const formattedProgress = Math.floor(progress).toString().padStart(3, "0");
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[9999] bg-bg flex flex-col"
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Top Left Eyebrow */}
+      <motion.div
+        className="absolute top-6 left-6 md:top-8 md:left-8 text-[10px] uppercase tracking-[0.3em] text-muted"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        Videographer & Editor
+      </motion.div>
+
+      {/* Center Words */}
+      <div className="flex-1 flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentWord}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-5xl md:text-7xl font-display italic text-text/80"
+          >
+            {WORDS[currentWord]}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom Right Counter */}
+      <div className="absolute bottom-6 right-6 md:bottom-8 md:right-8 text-7xl md:text-9xl font-display text-text tabular-nums">
+        {formattedProgress}
+      </div>
+
+      {/* Bottom Progress Bar */}
+      <div className="absolute bottom-0 left-0 w-full h-[2px] bg-stroke/50 origin-left">
+        <motion.div
+          className="h-full bg-white"
+          style={{ scaleX: progress / 100, transformOrigin: "left" }}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\Navigation.tsx =====
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const NAV_LINKS = [
+  { id: "work", label: "Work", path: "/work" },
+  { id: "about", label: "About", path: "/#about" },
+  { id: "services", label: "Services", path: "/#services" },
+  { id: "gear", label: "Gear", path: "/#gear" },
+  { id: "contact", label: "Contact", path: "/#contact" },
+];
+
+export default function Navigation() {
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 80);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Only run intersection observer on the home page for anchors
+    if (pathname !== "/") {
+      setActiveSection(pathname.includes("work") ? "work" : "");
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+
+    document.querySelectorAll("section[id]").forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, [pathname]);
+
+  return (
+    <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 max-w-[calc(100vw-32px)] w-full sm:w-auto flex justify-center">
+      <div
+        className={`flex items-center gap-2 sm:gap-4 rounded-full border px-2 py-2 transition-all duration-500 ${
+          scrolled 
+            ? "shadow-2xl shadow-black/80 backdrop-blur-3xl bg-white/[0.04] border-white/[0.08] scale-[0.98] -translate-y-1" 
+            : "backdrop-blur-md bg-surface border-white/10 scale-100 translate-y-0"
+        }`}
+      >
+        {/* Logo Circle */}
+        <Link href="/" className="w-[36px] h-[36px] border border-white/10 rounded-full flex items-center justify-center shrink-0 hover:bg-white/5 transition-colors cursor-pointer">
+          <span className="text-[11px] text-muted uppercase">DN</span>
+        </Link>
+
+        {/* Nav Links (Desktop) */}
+        <div className="hidden md:flex items-center">
+          {NAV_LINKS.map((link) => (
+            <Link
+              href={link.path}
+              key={link.id}
+              onClick={(e) => {
+                if (link.path.startsWith("/#") && pathname === "/") {
+                  e.preventDefault();
+                  document.getElementById(link.id)?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className={`text-xs uppercase tracking-[0.06em] px-4 py-2 rounded-full transition-colors duration-200 ${
+                activeSection === link.id
+                  ? "text-text bg-raised"
+                  : "text-muted hover:text-text hover:bg-raised/50"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Available Pill */}
+        <div className="hidden lg:flex items-center gap-2 text-xs text-muted border border-white/10 rounded-full px-3 py-1.5 shrink-0 ml-1">
+          <div className="bg-green-400 rounded-full w-1.5 h-1.5 animate-pulse" />
+          <span className="uppercase tracking-[0.06em]">Available</span>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden w-9 h-9 flex items-center justify-center text-muted hover:text-text transition-colors rounded-full hover:bg-white/5 ml-1"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
+        </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -8, x: "-50%" }} 
+            animate={{ opacity: 1, y: 0, x: "-50%" }} 
+            exit={{ opacity: 0, y: -8, x: "-50%" }} 
+            transition={{ duration: 0.2 }}
+            className="absolute top-[calc(100%+12px)] left-1/2 w-[min(280px,calc(100vw-32px))] bg-surface/95 backdrop-blur-xl border border-stroke rounded-2xl p-2 flex flex-col gap-1 md:hidden shadow-xl"
+          >
+            {NAV_LINKS.map((link) => (
+              <Link
+                href={link.path}
+                key={`mobile-${link.id}`}
+                onClick={(e) => {
+                  setIsMobileMenuOpen(false);
+                  if (link.path.startsWith("/#") && pathname === "/") {
+                    e.preventDefault();
+                    document.getElementById(link.id)?.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                className={`text-xs uppercase tracking-[0.06em] px-4 py-3.5 rounded-xl transition-colors duration-200 text-center ${
+                  activeSection === link.id
+                    ? "text-text bg-raised"
+                    : "text-muted hover:text-text hover:bg-raised/50"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\ReelsSection.tsx =====
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, animate, useMotionValue } from "framer-motion";
+import { Play, ChevronLeft, ChevronRight } from "lucide-react";
+import { REELS } from "@/data/projects";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getYouTubeId(url: string) {
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function getVimeoId(url: string) {
+  const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  return m ? m[1] : null;
+}
+
+function detectPlatform(url: string): "youtube" | "vimeo" | "local" | "unknown" {
+  if (!url) return "unknown";
+  if (getYouTubeId(url)) return "youtube";
+  if (getVimeoId(url)) return "vimeo";
+  if (url.startsWith("/") || url.startsWith("http")) return "local";
+  return "unknown";
+}
+
+// ─── Slide renderers ──────────────────────────────────────────────────────────
+
+function YouTubeSlide({ youtubeId, isActive }: { youtubeId: string; isActive: boolean }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const readyRef = useRef(false);
+  const src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+
+  const post = useCallback((func: string, args: unknown[] = []) => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func, args }),
+      "https://www.youtube.com"
+    );
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (!e.origin.includes("youtube.com")) return;
+      try {
+        const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+        if (data.event === "onReady") {
+          readyRef.current = true;
+          if (isActive) post("playVideo"); else post("pauseVideo");
+        }
+        if (data.event === "onStateChange" && data.info === 0) {
+          post("seekTo", [0, true]);
+          post("playVideo");
+        }
+      } catch {}
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [post, isActive]);
+
+  useEffect(() => {
+    if (!readyRef.current) return;
+    if (isActive) post("playVideo"); else post("pauseVideo");
+  }, [isActive, post]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      src={src}
+      title="YouTube video"
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowFullScreen
+      loading="lazy"
+      className="w-full h-full border-0 block"
+    />
+  );
+}
+
+function VimeoSlide({ vimeoId, isActive }: { vimeoId: string; isActive: boolean }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const readyRef = useRef(false);
+  const src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=0&controls=1&byline=0&title=0&portrait=0&dnt=1&transparent=0`;
+
+  const post = useCallback((method: string, value?: unknown) => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ method, value }),
+      "https://player.vimeo.com"
+    );
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (!e.origin.includes("vimeo.com")) return;
+      try {
+        const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+        if (data.event === "ready") {
+          readyRef.current = true;
+          post("addEventListener", "ended");
+          post("setVolume", 0);
+          if (isActive) post("play"); else post("pause");
+        }
+        if (data.event === "ended") {
+          post("setCurrentTime", 0);
+          post("play");
+        }
+      } catch {}
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [post, isActive]);
+
+  useEffect(() => {
+    if (!readyRef.current) return;
+    if (isActive) post("play"); else { post("pause"); post("setCurrentTime", 0); }
+  }, [isActive, post]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      src={src}
+      title="Vimeo video"
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowFullScreen
+      loading="lazy"
+      className="w-full h-full border-0 block"
+    />
+  );
+}
+
+function LocalSlide({ src, isActive }: { src: string; isActive: boolean }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (!isActive) { 
+      v.pause(); 
+      setIsPlaying(false);
+    }
+  }, [isActive]);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isPlaying) {
+      v.pause();
+    } else {
+      v.play().catch(() => {});
+    }
+  };
+
+  return (
+    <>
+      <video
+        ref={videoRef}
+        src={src}
+        playsInline
+        controls={isPlaying}
+        preload="metadata"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100 z-30 bg-black' : 'opacity-60'}`}
+        onEnded={() => setIsPlaying(false)}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+      />
+
+      {isActive && !isPlaying && (
+        <div 
+          className="absolute inset-0 cursor-pointer flex items-center justify-center z-20"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePlay();
+          }}
+        >
+          <div className="absolute inset-0 bg-black/20 hover:bg-black/40 transition-colors" />
+          <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 hover:scale-110 transition-transform">
+            <Play className="w-4 h-4 text-white fill-white ml-0.5 drop-shadow-md" />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function ReelsSection() {
+  const containerRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const animating = useRef(false);
+
+  const [trackWidth, setTrackWidth] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [clickable, setClickable] = useState(true);
+
+  // Responsive: 1 card on mobile, 3 on sm+, 4 on lg+
+  const getVisibleCount = (w: number) => {
+    if (w < 640) return 1;
+    if (w < 1024) return 3;
+    return 4;
+  };
+
+  const [visibleCount, setVisibleCount] = useState(4);
+  const GAP = 12;
+
+  // Measure track width
+  useEffect(() => {
+    if (!trackRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) {
+        setTrackWidth(w);
+        setVisibleCount(getVisibleCount(w));
+      }
+    });
+    ro.observe(trackRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const itemWidth = trackWidth > 0
+    ? (trackWidth - GAP * (visibleCount - 1)) / visibleCount
+    : 200;
+
+  const centerSlot = Math.floor(visibleCount / 2);
+
+  const offsetToCenter = trackWidth > 0
+    ? trackWidth / 2 - (centerSlot * (itemWidth + GAP) + itemWidth / 2)
+    : 0;
+
+  const SPRING = { type: "spring" as const, stiffness: 500, damping: 40 };
+
+  const slide = useCallback((delta: number) => {
+    if (animating.current || delta === 0) return;
+    animating.current = true;
+    animate(x, -(itemWidth + GAP) * delta, {
+      ...SPRING,
+      onComplete: () => {
+        x.set(0);
+        setActiveIndex((i) => {
+          const next = i + delta;
+          return ((next % REELS.length) + REELS.length) % REELS.length;
+        });
+        animating.current = false;
+      },
+    });
+  }, [itemWidth, x]);
+
+  const goNext = useCallback(() => slide(1), [slide]);
+  const goPrev = useCallback(() => slide(-1), [slide]);
+
+  const goTo = useCallback((index: number) => {
+    const len = REELS.length;
+    const raw = index - activeIndex;
+    const delta = ((raw + Math.round(len / 2)) % len) - Math.round(len / 2);
+    slide(delta);
+  }, [activeIndex, slide]);
+
+  const handleDragEnd = useCallback((_: unknown, info: { offset: { x: number } }) => {
+    if (Math.abs(info.offset.x) > itemWidth * 0.2) {
+      setClickable(false);
+      setTimeout(() => setClickable(true), 150);
+    }
+    if (info.offset.x < -itemWidth * 0.2) goNext();
+    else if (info.offset.x > itemWidth * 0.2) goPrev();
+  }, [itemWidth, goNext, goPrev]);
+
+  // Build visible slides from center outward
+  const visibleSlides = Array.from({ length: visibleCount }).map((_, slot) => {
+    const offset = slot - centerSlot;
+    const realIndex = ((activeIndex + offset) % REELS.length + REELS.length) % REELS.length;
+    return { index: realIndex, reel: REELS[realIndex], isActive: slot === centerSlot };
+  });
+
+  // GSAP scroll animations — only this component's triggers
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const triggers: ScrollTrigger[] = [];
+
+    const grid = containerRef.current.querySelector(".reels-grid");
+    if (grid) {
+      const st = ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top 75%",
+        toggleActions: "play none none reverse",
+        onEnter: () => {
+          gsap.fromTo(grid,
+            { y: 20, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
+          );
+        }
+      });
+      triggers.push(st);
+    }
+
+    const marker = containerRef.current.querySelector(".scene-marker");
+    if (marker) {
+      const st = ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top 80%",
+        toggleActions: "play none none reverse",
+        onEnter: () => {
+          gsap.fromTo(marker,
+            { opacity: 0, y: 15 },
+            { opacity: 0.35, y: 0, duration: 0.8, ease: "power2.out" }
+          );
+        }
+      });
+      triggers.push(st);
+    }
+
+    return () => { triggers.forEach((t) => t.kill()); };
+  }, []);
+
+  return (
+    <section
+      id="reels"
+      ref={containerRef}
+      className="pt-6 pb-20 px-4 sm:px-6 md:px-12 border-t border-stroke mt-16 relative overflow-hidden"
+    >
+      <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none">
+        TAKE 01
+      </div>
+
+      <div className="relative z-10 max-w-[1200px] mx-auto">
+        {/* Screenplay Scene Marker */}
+        <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+          <span>SCENE 05</span>
+          <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+          <span>SHORT FORM</span>
+        </div>
+
+        <div className="flex justify-between items-baseline mb-8 pt-8">
+          <h2 className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted">
+            Short form
+          </h2>
+          <div className="flex items-center gap-4">
+            <span className="text-[10px] text-ghost">
+              {activeIndex + 1} / {REELS.length}
+            </span>
+            {/* Arrow buttons — desktop only */}
+            <div className="hidden sm:flex items-center gap-1">
+              <button
+                onClick={goPrev}
+                className="w-8 h-8 rounded-full border border-stroke flex items-center justify-center text-muted hover:text-text hover:border-white/20 transition-colors"
+                aria-label="Previous reel"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={goNext}
+                className="w-8 h-8 rounded-full border border-stroke flex items-center justify-center text-muted hover:text-text hover:border-white/20 transition-colors"
+                aria-label="Next reel"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Carousel track */}
+        <div
+          className="reels-grid"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <div ref={trackRef} className="relative w-full overflow-hidden">
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.1}
+              onDragEnd={handleDragEnd}
+              style={{
+                display: "flex",
+                gap: GAP,
+                alignItems: "flex-start",
+                marginLeft: offsetToCenter,
+                x,
+                willChange: "transform",
+              }}
+            >
+              {visibleSlides.map(({ index, reel, isActive }) => {
+                const platform = detectPlatform(reel.video ?? "");
+                const ytId = reel.video ? getYouTubeId(reel.video) : null;
+                const vmId = reel.video ? getVimeoId(reel.video) : null;
+
+                return (
+                  <motion.div
+                    key={`${index}-${reel.id}`}
+                    aria-roledescription="slide"
+                    aria-current={isActive ? "true" : undefined}
+                    style={{
+                      width: itemWidth,
+                      flexShrink: 0,
+                      pointerEvents: clickable ? "auto" : "none",
+                      willChange: "transform",
+                    }}
+                    animate={{
+                      scale: isActive ? 1 : visibleCount === 1 ? 1 : 0.92,
+                      opacity: isActive ? 1 : visibleCount === 1 ? 1 : 0.45,
+                    }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="reel-card bg-surface border border-stroke rounded-lg overflow-hidden cursor-grab active:cursor-grabbing"
+                  >
+                    {/* 9:16 thumbnail */}
+                    <div className="aspect-[9/16] bg-black relative overflow-hidden">
+
+                      {reel.video && platform === "local" && (
+                        <LocalSlide src={reel.video} isActive={isActive} />
+                      )}
+                      {reel.video && platform === "youtube" && ytId && (
+                        <YouTubeSlide youtubeId={ytId} isActive={isActive} />
+                      )}
+                      {reel.video && platform === "vimeo" && vmId && (
+                        <VimeoSlide vimeoId={vmId} isActive={isActive} />
+                      )}
+
+                      {/* Play overlay — only on non-active cards or local videos without autoplay */}
+                      {!isActive && (
+                        <div
+                          className="absolute inset-0 flex items-center justify-center z-20 bg-black/30"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const slot = visibleSlides.findIndex((s) => s.index === index);
+                            const delta = slot - centerSlot;
+                            if (delta !== 0) slide(delta);
+                          }}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="px-3 pt-2 pb-3">
+                      <h3 className="text-[13px] text-text/80 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                        {reel.name}
+                      </h3>
+                      <p className="text-[10px] text-faint mt-0.5">{reel.category}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </div>
+
+          {/* Dot navigation */}
+          <div
+            role="tablist"
+            aria-label="Reel slides"
+            className="flex items-center justify-center gap-2 mt-5"
+          >
+            {REELS.map((_, i) => {
+              const isActiveDot = i === activeIndex;
+              return (
+                <button
+                  key={i}
+                  role="tab"
+                  aria-selected={isActiveDot}
+                  aria-label={`Go to reel ${i + 1}`}
+                  onClick={() => goTo(i)}
+                  className="h-1.5 rounded-full transition-all duration-300 ease-out"
+                  style={{
+                    width: isActiveDot ? 24 : 6,
+                    background: isActiveDot
+                      ? "rgba(139, 92, 246, 0.8)"
+                      : "rgba(255,255,255,0.2)",
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\ServicesSection.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Video, Film, MonitorPlay, Layers } from "lucide-react";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const SERVICES = [
+  {
+    name: "Wedding films",
+    desc: "Full-day cinematic coverage.",
+    price: "Starting ₹45,000",
+    icon: Video,
+  },
+  {
+    name: "Brand commercials",
+    desc: "Concept to delivery.",
+    price: "Starting ₹30,000",
+    icon: Film,
+  },
+  {
+    name: "Music videos",
+    desc: "Narrative visuals + grade.",
+    price: "Starting ₹20,000",
+    icon: MonitorPlay,
+  },
+  {
+    name: "Post-production",
+    desc: "Edit, grade, titles, export.",
+    price: "Starting ₹8,000",
+    icon: Layers,
+  },
+];
+
+export default function ServicesSection() {
+  const containerRef = useRef<HTMLElement>(null);
+  
+  // Parallax setup
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-15%", "15%"]);
+  
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const triggers: ScrollTrigger[] = [];
+
+    // Focus pull + fade in on grid
+    const grid = containerRef.current.querySelector(".services-grid");
+    if (grid) {
+      gsap.set(grid, { willChange: "filter, transform" });
+      const gridTween = gsap.fromTo(grid,
+        {
+          y: 30,
+          opacity: 0.7,
+          filter: "blur(8px)"
+        },
+        {
+          y: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 1.1,
+          ease: "power2.out",
+          onComplete: () => { (grid as HTMLElement).style.willChange = "auto"; },
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 75%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (gridTween.scrollTrigger) triggers.push(gridTween.scrollTrigger);
+    }
+
+    // Fade in scene marker
+    const marker = containerRef.current.querySelector(".scene-marker");
+    if (marker) {
+      const markerTween = gsap.fromTo(marker,
+        { opacity: 0, y: 15 },
+        {
+          opacity: 0.35,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          }
+        }
+      );
+      if (markerTween.scrollTrigger) triggers.push(markerTween.scrollTrigger);
+    }
+
+    return () => { triggers.forEach(t => t.kill()); };
+  }, []);
+
+  return (
+    <section id="services" ref={containerRef} className="py-16 px-4 sm:px-6 md:px-12 relative overflow-hidden">
+      
+      {/* Editorial Easter Egg */}
+      <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none">
+        SEQ B
+      </div>
+      
+      {/* Parallax Background Photo Placeholder */}
+      <motion.div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-5 grayscale"
+        style={{ y: isMobile ? 0 : y }}
+      >
+        <div className="w-full h-[130%] absolute top-[-15%] left-0" style={{ backgroundImage: "repeating-linear-gradient(-45deg, #151515 0 1px, transparent 1px 12px)" }}>
+          <div className="absolute inset-0 flex items-center justify-center text-4xl uppercase tracking-widest text-faint mix-blend-overlay">
+            [BTS PHOTO PLACEHOLDER 2]
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="relative z-10 max-w-[1200px] mx-auto">
+        {/* Screenplay Scene Marker */}
+        <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+          <span>SCENE 03</span>
+          <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+          <span>SERVICES</span>
+        </div>
+
+        <div className="flex justify-between items-baseline mb-10">
+          <h2 className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted">
+            Services
+          </h2>
+          <span className="text-[10px] text-ghost">What I offer</span>
+        </div>
+
+      <div className="services-grid grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {SERVICES.map((service, i) => {
+          const Icon = service.icon;
+          return (
+            <div
+              key={i}
+              className="service-card bg-surface border border-stroke rounded-lg p-4 sm:p-5 hover:border-white/20 transition-colors duration-200"
+            >
+              <div className="w-[34px] h-[34px] bg-raised border border-stroke/50 rounded-md flex items-center justify-center mb-4">
+                <Icon className="w-[16px] h-[16px] text-faint" />
+              </div>
+              <h3 className="text-[14px] font-medium text-text/80">
+                {service.name}
+              </h3>
+              <p className="text-[12px] text-muted leading-relaxed mt-1.5">
+                {service.desc}
+              </p>
+              <div className="text-[11px] text-ghost border-t border-stroke pt-3 mt-4">
+                {service.price}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\SmoothScrolling.tsx =====
+"use client";
+
+import { ReactLenis } from 'lenis/react';
+import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
+import { useEffect, useRef } from 'react';
+
+export default function SmoothScrolling({ children }: { children: React.ReactNode }) {
+  const lenisRef = useRef<any>(null);
+  
+  useEffect(() => {
+    function update(time: number) {
+      lenisRef.current?.lenis?.raf(time * 1000);
+    }
+  
+    gsap.ticker.add(update);
+    lenisRef.current?.lenis?.on('scroll', ScrollTrigger.update);
+  
+    // Robust height recalculation for tablet/mobile views where dvh or late-mounting elements break scroll height
+    const ro = new ResizeObserver(() => {
+      ScrollTrigger.refresh();
+      lenisRef.current?.lenis?.resize();
+    });
+    
+    if (typeof document !== 'undefined') {
+      ro.observe(document.body);
+    }
+
+    return () => {
+      gsap.ticker.remove(update);
+      ro.disconnect();
+    };
+  }, []);
+
+  return (
+    <ReactLenis root ref={lenisRef} autoRaf={false} options={{ lerp: 0.12, duration: 1.2, smoothWheel: true }}>
+      {children}
+    </ReactLenis>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\TimecodeOverlay.tsx =====
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+
+export default function TimecodeOverlay() {
+  const [timecode, setTimecode] = useState("00:14:23:00");
+  const frameRef = useRef({ h: 0, m: 14, s: 23, f: 0 });
+
+  useEffect(() => {
+    let raf: number;
+    let last = performance.now();
+
+    const tick = (now: number) => {
+      if (now - last >= 1000 / 24) {
+        last = now;
+        const fc = frameRef.current;
+        fc.f++;
+        if (fc.f >= 24) { fc.f = 0; fc.s++; }
+        if (fc.s >= 60) { fc.s = 0; fc.m++; }
+        if (fc.m >= 60) { fc.m = 0; fc.h++; }
+        setTimecode(
+          `${String(fc.h).padStart(2,"0")}:${String(fc.m).padStart(2,"0")}:${String(fc.s).padStart(2,"0")}:${String(fc.f).padStart(2,"0")}`
+        );
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden hidden sm:block">
+      
+      {/* Left Edge: Metadata */}
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 -rotate-90 origin-left flex items-center gap-6 text-[10px] uppercase tracking-[0.2em] text-faint">
+        <span>ISO 800</span>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span>F/2.8</span>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span>24 FPS</span>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span>4K DCI</span>
+      </div>
+
+      {/* Right Edge: Timecode & REC */}
+      <div className="absolute right-6 top-1/2 -translate-y-1/2 rotate-90 origin-right flex items-center gap-6 text-[10px] uppercase tracking-[0.2em] text-faint">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+          <span>REC</span>
+        </div>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span className="tabular-nums font-mono">
+          {timecode}
+        </span>
+      </div>
+
+    </div>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\TimelineHUD.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+
+// Formats a raw frame count at 24fps to HH:MM:SS:FF
+const formatFramesToTimecode = (totalFrames: number) => {
+  const roundedFrames = Math.max(0, Math.floor(totalFrames));
+  const fps = 24;
+  const ff = roundedFrames % fps;
+  const totalSeconds = Math.floor(roundedFrames / fps);
+  const ss = totalSeconds % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const mm = totalMinutes % 60;
+  const hh = Math.floor(totalMinutes / 60);
+
+  return `${hh.toString().padStart(2, "0")}:${mm
+    .toString()
+    .padStart(2, "0")}:${ss.toString().padStart(2, "0")}:${ff
+    .toString()
+    .padStart(2, "0")}`;
+};
+
+export default function TimelineHUD() {
+  const pathname = usePathname();
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [timecode, setTimecode] = useState("00:00:00:00");
+  const [activeSceneIndex, setActiveSceneIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  const offsetsRef = useRef({
+    about: 0,
+    services: 0,
+    gear: 0,
+    contact: 0,
+    reels: 0,
+    bts: 0,
+    maxScroll: 1,
+  });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Scene definitions per route
+  const getScenesForRoute = () => {
+    if (pathname === "/") {
+      return [
+        { id: "hero", label: "01 HOME" },
+        { id: "about", label: "02 ABOUT" },
+        { id: "services", label: "03 SERVICES" },
+        { id: "gear", label: "04 GEAR" },
+        { id: "contact", label: "05 CONTACT" },
+      ];
+    } else if (pathname === "/work") {
+      return [
+        { id: "work-list", label: "01 WORK" },
+        { id: "reels", label: "02 REELS" },
+      ];
+    } else if (pathname.startsWith("/work/")) {
+      return [
+        { id: "case-study-top", label: "01 FILM" },
+        { id: "bts-grid", label: "02 BTS" },
+      ];
+    }
+    return [];
+  };
+
+  const scenes = getScenesForRoute();
+
+  // Measure offsets of elements on resize or route transition
+  useEffect(() => {
+    const measure = () => {
+      const scrollMax = document.documentElement.scrollHeight - window.innerHeight;
+      const aboutEl = document.getElementById("about");
+      const servicesEl = document.getElementById("services");
+      const gearEl = document.getElementById("gear");
+      const contactEl = document.getElementById("contact");
+      const reelsEl = document.getElementById("reels");
+      const btsEl = document.getElementById("bts-grid");
+
+      offsetsRef.current = {
+        about: aboutEl ? aboutEl.offsetTop : scrollMax * 0.25,
+        services: servicesEl ? servicesEl.offsetTop : scrollMax * 0.5,
+        gear: gearEl ? gearEl.offsetTop : scrollMax * 0.7,
+        contact: contactEl ? contactEl.offsetTop : scrollMax * 0.85,
+        reels: reelsEl ? reelsEl.offsetTop : scrollMax * 0.6,
+        bts: btsEl ? btsEl.offsetTop : scrollMax * 0.5,
+        maxScroll: scrollMax > 0 ? scrollMax : 1,
+      };
+    };
+
+    // Run measurement immediately and then after a brief delay
+    // to account for dynamic contents loading
+    measure();
+    const timer = setTimeout(measure, 500);
+
+    window.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      clearTimeout(timer);
+    };
+  }, [pathname]);
+
+  // Track scroll and calculate scrollProgress + timecode + active scene
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      const maxScroll = offsetsRef.current.maxScroll;
+      const progress = maxScroll > 0 ? Math.min(1, Math.max(0, y / maxScroll)) : 0;
+
+      setScrollProgress(progress);
+
+      let calculatedFrames = 0;
+      let activeIdx = 0;
+      const offsets = offsetsRef.current;
+
+      if (pathname === "/") {
+        // Homepage interpolation targets:
+        // Hero top (y=0) -> 00:00:00:00 (0 frames)
+        // About top (y=yAbout) -> 00:00:45:12 (1092 frames)
+        // Services top (y=yServices) -> 00:01:12:08 (1736 frames)
+        // Gear top (y=yGear) -> 00:02:00:00 (2880 frames) (Intermediate interpolation)
+        // Contact top (y=yContact) -> 00:03:15:10 (4690 frames)
+        // Page End (y=maxScroll) -> 00:03:30:00 (5040 frames)
+        const fHero = 0;
+        const fAbout = 1092;
+        const fServices = 1736;
+        const fGear = 2880;
+        const fContact = 4690;
+        const fEnd = 5040;
+
+        if (y < offsets.about) {
+          const ratio = offsets.about > 0 ? y / offsets.about : 0;
+          calculatedFrames = fHero + ratio * (fAbout - fHero);
+          activeIdx = 0;
+        } else if (y < offsets.services) {
+          const ratio = (y - offsets.about) / (offsets.services - offsets.about);
+          calculatedFrames = fAbout + ratio * (fServices - fAbout);
+          activeIdx = 1;
+        } else if (y < offsets.gear) {
+          const ratio = (y - offsets.services) / (offsets.gear - offsets.services);
+          calculatedFrames = fServices + ratio * (fGear - fServices);
+          activeIdx = 2;
+        } else if (y < offsets.contact) {
+          const ratio = (y - offsets.gear) / (offsets.contact - offsets.gear);
+          calculatedFrames = fGear + ratio * (fContact - fGear);
+          activeIdx = 3;
+        } else {
+          const ratio = maxScroll - offsets.contact > 0 ? (y - offsets.contact) / (maxScroll - offsets.contact) : 0;
+          calculatedFrames = fContact + Math.min(1, ratio) * (fEnd - fContact);
+          activeIdx = 4;
+        }
+      } else if (pathname === "/work") {
+        // Work Listing Page:
+        // Scroll progress maps from 00:02:24:18 (3474 frames) to 00:03:00:00 (4320 frames)
+        // Reels top (y=yReels) -> 00:02:45:00 (3960 frames)
+        const fWorkStart = 3474;
+        const fReelsStart = 3960;
+        const fWorkEnd = 4320;
+
+        if (y < offsets.reels) {
+          const ratio = offsets.reels > 0 ? y / offsets.reels : 0;
+          calculatedFrames = fWorkStart + ratio * (fReelsStart - fWorkStart);
+          activeIdx = 0;
+        } else {
+          const ratio = maxScroll - offsets.reels > 0 ? (y - offsets.reels) / (maxScroll - offsets.reels) : 0;
+          calculatedFrames = fReelsStart + Math.min(1, ratio) * (fWorkEnd - fReelsStart);
+          activeIdx = 1;
+        }
+      } else if (pathname.startsWith("/work/")) {
+        // Case Study Page:
+        // Scroll progress maps from 00:03:30:00 (5040 frames) to 00:04:45:00 (6840 frames)
+        // BTS top (y=yBts) -> 00:04:10:00 (6000 frames)
+        const fBtsStart = 5040;
+        const fGridStart = 6000;
+        const fBtsEnd = 6840;
+
+        if (y < offsets.bts) {
+          const ratio = offsets.bts > 0 ? y / offsets.bts : 0;
+          calculatedFrames = fBtsStart + ratio * (fGridStart - fBtsStart);
+          activeIdx = 0;
+        } else {
+          const ratio = maxScroll - offsets.bts > 0 ? (y - offsets.bts) / (maxScroll - offsets.bts) : 0;
+          calculatedFrames = fGridStart + Math.min(1, ratio) * (fBtsEnd - fGridStart);
+          activeIdx = 1;
+        }
+      }
+
+      setTimecode(formatFramesToTimecode(calculatedFrames));
+      setActiveSceneIndex(activeIdx);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial call
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [pathname]);
+
+  // Bottom wave animation bars
+  const barCount = 50;
+
+  if (!mounted) return null;
+
+  return (
+    <>
+      {/* 1. Left Edge Metadata HUD Overlay */}
+      <div className="fixed left-6 top-1/2 -translate-y-1/2 -rotate-90 origin-left flex items-center gap-6 text-[10px] uppercase tracking-[0.2em] text-faint z-40 hidden sm:flex pointer-events-none select-none">
+        <span>ISO 800</span>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span>F/2.8</span>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span>24 FPS</span>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span>4K DCI</span>
+      </div>
+
+      {/* 2. Right Edge Blinking REC HUD Overlay */}
+      <div className="fixed right-6 top-1/2 -translate-y-1/2 rotate-90 origin-right flex items-center gap-6 text-[10px] uppercase tracking-[0.2em] text-faint z-40 hidden sm:flex pointer-events-none select-none">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+          <span>REC</span>
+        </div>
+        <span className="w-1 h-1 rounded-full bg-stroke" />
+        <span className="tabular-nums font-mono">
+          {timecode}
+        </span>
+      </div>
+
+      {/* 3. Bottom Video Timeline Panel */}
+      <div className="fixed bottom-0 left-0 right-0 z-45 bg-[#0a0a0a]/90 backdrop-blur-md border-t border-stroke/80 px-3 py-2 md:px-6 md:py-4 lg:px-12 flex flex-col gap-3 select-none">
+        {/* Subtle Waveform Animation Overlay */}
+        <div className="absolute inset-x-0 bottom-0 top-0 hidden sm:flex items-center justify-around pointer-events-none opacity-[0.04] h-full px-6 overflow-hidden">
+          {Array.from({ length: barCount }).map((_, i) => {
+            const height = 14 + Math.sin(i * 0.15) * 8 + Math.random() * 4;
+            const duration = 1.0 + Math.sin(i * 0.4) * 0.5 + Math.random() * 0.3;
+            const delay = -Math.random() * 2;
+            return (
+              <div
+                key={i}
+                className="w-[1.5px] bg-white rounded-full origin-center"
+                style={{
+                  height: `${height}px`,
+                  animation: `timelineWave ${duration}s ease-in-out ${delay}s infinite alternate`,
+                  willChange: "transform",
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Timeline Header Row */}
+        <div className="relative z-10 hidden sm:flex justify-between items-center text-[10px] uppercase tracking-[0.15em] text-faint">
+          <div className="flex items-center gap-2">
+            <span className="text-muted/80">VIDEO TIMELINE</span>
+            <span className="text-stroke">|</span>
+            <span className="font-mono text-faint/80">
+              {scenes[activeSceneIndex]?.label || (pathname === "/" ? "SEQ_HOME" : pathname === "/work" ? "SEQ_WORK" : "SEQ_STUDY")}
+            </span>
+          </div>
+          <div className="font-mono text-muted tracking-widest tabular-nums bg-[#111] px-2 py-0.5 border border-stroke rounded">
+            {timecode}
+          </div>
+        </div>
+
+        {/* Timeline Track with Playhead */}
+        <div className="relative z-10 w-full py-1.5 flex items-center">
+          <div className="w-full h-[2px] bg-stroke relative rounded-full">
+            {/* Scene Markers on Track */}
+            {scenes.map((scene, i) => {
+              const el = typeof document !== 'undefined' ? document.getElementById(scene.id) : null;
+              const maxScroll = offsetsRef.current?.maxScroll || 1;
+              const offsetTop = el ? el.offsetTop : 0;
+              const percent = maxScroll > 0 ? (offsetTop / maxScroll) * 100 : 0;
+              
+              if (percent === 0 && i !== 0) return null; // hide if not found
+              
+              return (
+                <div 
+                  key={`marker-${scene.id}`}
+                  className="absolute top-1/2 -translate-y-1/2 w-[1px] h-[6px] bg-faint/60"
+                  style={{ left: `${percent}%` }}
+                />
+              );
+            })}
+
+            {/* Playhead Track Progress Highlight */}
+            <div 
+              className="absolute left-0 top-0 h-full bg-purple-500/20"
+              style={{ width: `${scrollProgress * 100}%` }}
+            />
+            {/* Playhead Indicator Dot */}
+            <div 
+              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.6)] flex items-center justify-center cursor-pointer transition-transform duration-75 hover:scale-125 z-10"
+              style={{ left: `calc(${scrollProgress * 100}% - 6px)` }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            </div>
+          </div>
+        </div>
+
+        {/* Active Scene Highlights Row */}
+        <div className="relative z-10 flex justify-between items-center gap-2 overflow-x-auto no-scrollbar pt-0.5 timeline-scenes">
+          <div className="flex items-center gap-6 md:gap-8">
+            {scenes.map((scene, index) => {
+              const isActive = index === activeSceneIndex;
+              return (
+                <div 
+                  key={scene.id} 
+                  onClick={() => {
+                    if (scene.id === "hero") {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      return;
+                    }
+                    const el = document.getElementById(scene.id);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  className={`${isActive ? "flex" : "hidden sm:flex"} items-center gap-1.5 text-[9px] uppercase tracking-[0.15em] transition-all duration-300 cursor-pointer ${
+                    isActive 
+                      ? "text-purple-400 font-medium drop-shadow-[0_0_6px_rgba(139,92,246,0.4)]" 
+                      : "text-faint hover:text-muted"
+                  }`}
+                >
+                  <span className={`w-1 h-1 rounded-full transition-all duration-300 ${
+                    isActive ? "bg-purple-400 scale-125 shadow-[0_0_4px_rgba(139,92,246,0.6)]" : "bg-stroke"
+                  }`} />
+                  <span>{scene.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hidden md:block text-[8px] uppercase tracking-[0.15em] text-faint">
+            TAKE 03 &bull; ROLL 07 &bull; 24.00 fps
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\VideoModal.tsx =====
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { X } from "lucide-react";
+
+interface VideoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  videoUrl?: string; // Could be HLS stream URL or generic mp4
+}
+
+export default function VideoModal({ isOpen, onClose, videoUrl }: VideoModalProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Keyboard escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Scroll lock and Pause on close
+  useEffect(() => {
+    if (!isOpen && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
+  // HLS and source logic
+  useEffect(() => {
+    if (!isOpen || !videoUrl || !videoRef.current) return;
+
+    const isHLS = videoUrl.includes(".m3u8");
+    
+    if (isHLS) {
+      import("hls.js").then(({ default: Hls }) => {
+        if (Hls.isSupported()) {
+          const hls = new Hls({ startLevel: -1 });
+          hls.loadSource(videoUrl);
+          hls.attachMedia(videoRef.current!);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            videoRef.current?.play().catch(() => {});
+          });
+          return () => hls.destroy();
+        } else if (videoRef.current?.canPlayType("application/vnd.apple.mpegurl")) {
+          videoRef.current.src = videoUrl;
+          videoRef.current.play().catch(() => {});
+        }
+      });
+    } else {
+      videoRef.current.src = videoUrl;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [isOpen, videoUrl]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-[201]"
+          >
+            <X className="w-8 h-8" />
+          </button>
+
+          <div className="w-full max-w-5xl aspect-video bg-surface rounded-lg overflow-hidden border border-stroke shadow-2xl relative">
+            {videoUrl ? (
+              <video
+                ref={videoRef}
+                controls
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-muted">
+                <span className="text-sm uppercase tracking-widest text-faint mb-2">Video Placeholder</span>
+                <span className="text-xs">Provide a valid [REEL_URL] to stream here.</span>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\components\WorkSection.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Play } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { PROJECTS } from "@/data/projects";
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function WorkSection() {
+  const containerRef = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const grid = containerRef.current.querySelector(".work-grid");
+    const marker = containerRef.current.querySelector(".scene-marker");
+    const isWorkPage = pathname === "/work";
+
+    // Track only THIS component's ScrollTriggers so we don't nuke TimelineHUD's
+    const triggers: ScrollTrigger[] = [];
+
+    if (isWorkPage) {
+      // On /work page: instant reveal, no blur delay — content should feel immediate
+      gsap.set(grid, { opacity: 1, filter: "blur(0px)", y: 0 });
+      gsap.set(marker, { opacity: 0.35, y: 0 });
+
+      // Subtle fade-up only (no blur), short duration
+      const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+
+      if (marker) {
+        tl.fromTo(marker,
+          { opacity: 0, y: 10 },
+          { opacity: 0.35, y: 0, duration: 0.4 }
+        );
+      }
+
+      if (grid) {
+        tl.fromTo(grid,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5 },
+          "-=0.3"
+        );
+      }
+    } else {
+      // On home page: ScrollTriggered with blur (fine here since user scrolls to it)
+      if (grid) {
+        const st = ScrollTrigger.create({
+          trigger: containerRef.current,
+          start: "top 75%",
+          toggleActions: "play none none reverse",
+          onEnter: () => {
+            gsap.fromTo(grid,
+              { y: 30, opacity: 0.7, filter: "blur(8px)" },
+              { y: 0, opacity: 1, filter: "blur(0px)", duration: 1.0, ease: "power2.out" }
+            );
+          }
+        });
+        triggers.push(st);
+      }
+
+      if (marker) {
+        const st = ScrollTrigger.create({
+          trigger: containerRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+          onEnter: () => {
+            gsap.fromTo(marker,
+              { opacity: 0, y: 15 },
+              { opacity: 0.35, y: 0, duration: 0.8, ease: "power2.out" }
+            );
+          }
+        });
+        triggers.push(st);
+      }
+    }
+
+    // Only kill THIS component's triggers — never all triggers globally
+    return () => {
+      triggers.forEach(t => t.kill());
+    };
+  }, [pathname]);
+
+  return (
+    <section id="work-list" ref={containerRef} className="py-16 px-4 sm:px-6 md:px-12 relative overflow-hidden">
+      
+      {/* Editorial Easter Egg */}
+      <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none">
+        SEQ D
+      </div>
+
+      <div className="relative z-10 max-w-[1200px] mx-auto">
+        {/* Screenplay Scene Marker */}
+        <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
+          <span>SCENE 04</span>
+          <span className="w-1 h-1 rounded-full bg-purple-500/50" />
+          <span>SELECTED WORK</span>
+        </div>
+
+        <div className="flex justify-between items-baseline mb-10 gap-4 min-w-0">
+          <h2 className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted">
+            Selected work
+          </h2>
+          <span className="text-[10px] text-ghost">
+            {PROJECTS.length < 10 ? `0${PROJECTS.length}` : PROJECTS.length} projects
+          </span>
+        </div>
+
+        <div className="work-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {PROJECTS.map((project) => (
+            <Link
+              key={project.id}
+              href={`/work/${project.slug}`}
+              prefetch={true}
+              className="work-card group bg-surface border border-stroke rounded-lg overflow-hidden cursor-pointer transition-colors duration-200 hover:border-white/20 block"
+            >
+              {/* Thumbnail */}
+              <div className="aspect-video bg-raised relative flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-[#111]" />
+                {project.poster && (
+                  <img 
+                    src={project.poster} 
+                    alt={project.name} 
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-300" 
+                  />
+                )}
+                
+
+                
+                <span className="z-10 text-[9px] uppercase tracking-wider text-faint mix-blend-difference drop-shadow-md">
+                  {project.category.split("·")[0].trim()}
+                </span>
+                
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                  <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                    <Play className="w-5 h-5 text-white fill-white ml-0.5 drop-shadow-md" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="px-3 pt-2 pb-3 flex justify-between items-start">
+                <div>
+                  <h3 className="text-[13px] text-text/80 font-medium leading-snug">
+                    {project.name}
+                  </h3>
+                  <p className="text-[10px] text-faint mt-0.5">
+                    {project.category}
+                  </p>
+                </div>
+                <span className="text-[10px] text-ghost">{project.year}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+===== D:\portfolio website\work\next-portfolio\src\data\projects.ts =====
+export interface ProjectData {
+  id: number;
+  slug: string;
+  name: string;
+  category: string;
+  year: string;
+  pattern: string;
+  client: string;
+  role: string;
+  gear: string[];
+  directorNotes: string;
+  video?: string;
+  poster?: string;
+}
+
+export const PROJECTS: ProjectData[] = [
+  {
+    id: 1,
+    slug: "the-kapoor-film",
+    name: "The Kapoor Film",
+    category: "Wedding · 4K",
+    year: "2024",
+    pattern: "repeating-linear-gradient(45deg, #161616 0 1px, transparent 1px 14px)",
+    client: "Priya & Rahul Kapoor",
+    role: "Director of Photography & Lead Editor",
+    gear: ["Sony FX3", "Sony 24-70mm f/2.8", "DJI RS 3 Pro", "DJI Mini 4 Pro"],
+    directorNotes:
+      "A cinematic three-day destination wedding shot entirely in 4K 10-bit log. The primary goal was to capture authentic, documentary-style moments while maintaining a highly polished, editorial aesthetic. We utilized natural light extensively and relied on the FX3's dual base ISO for pristine low-light reception events.",
+    video: "/shot2_web.mp4",
+    poster: "/posters/default.jpg",
+  },
+  {
+    id: 2,
+    slug: "arch-studio",
+    name: "Arch Studio",
+    category: "Commercial · Colour",
+    year: "2024",
+    pattern: "repeating-linear-gradient(-45deg, #161616 0 1px, transparent 1px 12px)",
+    client: "Arch Architectural Studio",
+    role: "Colorist & Second Cam",
+    gear: ["DaVinci Resolve Studio", "Sony A7 IV", "Sigma 18-35mm f/1.8"],
+    directorNotes:
+      "A fast-paced commercial project designed to showcase brutalist concrete architecture. The color grade was built from scratch to emphasize the cold, imposing grays while keeping skin tones warm and natural. We shot mostly during blue hour to achieve the specific mood requested by the agency.",
+    video: "/shot2_web.mp4",
+    poster: "/posters/default.jpg",
+  },
+  {
+    id: 3,
+    slug: "void-ep-1",
+    name: "Void — Ep. 1",
+    category: "Music video · Edit",
+    year: "2023",
+    pattern: "repeating-linear-gradient(90deg, #161616 0 1px, transparent 1px 16px)",
+    client: "Independent Artist",
+    role: "Lead Editor & VFX",
+    gear: ["Adobe Premiere Pro", "After Effects"],
+    directorNotes:
+      "An experimental narrative music video heavily reliant on rhythmic pacing and glitch aesthetics. I was brought on purely for post-production. The edit process involved manually creating stutter frames and building custom displacement maps to mimic analog tape damage, syncing perfectly with the heavy 808 beats.",
+    video: "/shot2_web.mp4",
+    poster: "/posters/default.jpg",
+  },
+  {
+    id: 4,
+    slug: "open-waters",
+    name: "Open Waters",
+    category: "Documentary · DCP",
+    year: "2023",
+    pattern: "repeating-linear-gradient(0deg, #161616 0 1px, transparent 1px 10px)",
+    client: "Oceanic Trust",
+    role: "Cinematographer",
+    gear: ["Sony FX3", "GoPro Hero 12 (Underwater Housing)"],
+    directorNotes:
+      "A grueling 14-day shoot on open water following local fishermen. The harsh sunlight and constant movement required a very stripped-down, run-and-gun setup. Waterproofing and maintaining focus while balancing on a moving vessel were the biggest challenges.",
+    video: "/shot2_web.mp4",
+    poster: "/posters/default.jpg",
+  },
+  {
+    id: 5,
+    slug: "techfest-recap",
+    name: "TechFest Recap",
+    category: "Event · Reel",
+    year: "2023",
+    pattern: "repeating-linear-gradient(135deg, #161616 0 1px, transparent 1px 13px)",
+    client: "TechFest 2023",
+    role: "Videographer & Editor",
+    gear: ["Sony A7 IV", "DJI Pocket 3", "DJI RS 3 Pro"],
+    directorNotes:
+      "High-energy event recap requiring extremely rapid turnaround. Shot the event during the day and edited overnight to deliver a 60-second social reel by 8 AM the next morning. The DJI Pocket 3 proved invaluable for getting smooth, stabilizing shots through crowded convention halls.",
+    video: "/shot2_web.mp4",
+    poster: "/posters/default.jpg",
+  },
+  {
+    id: 6,
+    slug: "still-life",
+    name: "Still Life",
+    category: "Short film · Grade",
+    year: "2022",
+    pattern: "repeating-linear-gradient(60deg, #161616 0 1px, transparent 1px 11px)",
+    client: "Director: Sam Aris",
+    role: "Colorist",
+    gear: ["DaVinci Resolve Studio", "FSI DM240 Reference Monitor"],
+    directorNotes:
+      "An intimate, dialogue-free short film focusing on the minutiae of everyday life. The director wanted a heavily stylized, vintage film look. I built a custom film emulation node tree mimicking Kodak 2383 print film, adding halation and heavy grain to achieve the 16mm aesthetic.",
+    video: "/shot2_web.mp4",
+    poster: "/posters/default.jpg",
+  },
+];
+
+export interface ReelData {
+  id: number;
+  name: string;
+  category: string;
+  pattern: string;
+  video?: string;
+  poster?: string;
+}
+
+export const REELS: ReelData[] = [
+  {
+    id: 1,
+    name: "Fashion Week '25",
+    category: "Social · 9:16",
+    pattern: "repeating-linear-gradient(30deg, #161616 0 1px, transparent 1px 14px)",
+    video: "/IMG_1315_web.mp4",
+    poster: "/posters/IMG_1315.jpg",
+  },
+  {
+    id: 2,
+    name: "Nike Run Club",
+    category: "Promo · 9:16",
+    pattern: "repeating-linear-gradient(-30deg, #161616 0 1px, transparent 1px 14px)",
+    video: "/IMG_1757_web.mp4",
+    poster: "/posters/IMG_1757.jpg",
+  },
+  {
+    id: 3,
+    name: "Behind the Lens",
+    category: "BTS · 9:16",
+    pattern: "repeating-linear-gradient(15deg, #161616 0 1px, transparent 1px 14px)",
+    video: "/IMG_1796_web.mp4",
+    poster: "/posters/IMG_1796.jpg",
+  },
+  {
+    id: 4,
+    name: "Cafe Architecture",
+    category: "Interior · 9:16",
+    pattern: "repeating-linear-gradient(-15deg, #161616 0 1px, transparent 1px 14px)",
+    video: "/IMG_4510_web.mp4",
+    poster: "/posters/IMG_4510.jpg",
+  },
+];
+

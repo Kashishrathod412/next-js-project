@@ -2,26 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  :root, [data-theme="dark"] {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --raised: #161616;
+    --text: #ffffff;
+    --muted: #ffffff;
+    --faint: #f5f5f5;
+    --ghost: #e5e5e5;
+    --stroke: #1f1f1f;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Lenis recommended CSS */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .text-display {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
   }
 }
+
+/* Hide horizontal scrollbar but allow vertical */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--stroke);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--faint);
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--stroke) var(--bg);
+}
+
+@keyframes timelineWave {
+  0% {
+    transform: scaleY(0.25);
+  }
+  100% {
+    transform: scaleY(1.1);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.timeline-scenes {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation-name: fadeIn;
+}
+
