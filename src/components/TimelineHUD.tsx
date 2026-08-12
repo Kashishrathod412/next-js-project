@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useLenis } from "lenis/react";
 
 // Formats a raw frame count at 24fps to HH:MM:SS:FF
 const formatFramesToTimecode = (totalFrames: number) => {
@@ -23,6 +24,7 @@ const formatFramesToTimecode = (totalFrames: number) => {
 
 export default function TimelineHUD() {
   const pathname = usePathname();
+  const lenis = useLenis();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [timecode, setTimecode] = useState("00:00:00:00");
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
@@ -30,11 +32,9 @@ export default function TimelineHUD() {
 
   const offsetsRef = useRef({
     about: 0,
-    services: 0,
-    gear: 0,
     contact: 0,
-    reels: 0,
     bts: 0,
+    workSections: [0, 0, 0, 0],
     maxScroll: 1,
   });
 
@@ -48,14 +48,14 @@ export default function TimelineHUD() {
       return [
         { id: "hero", label: "01 HOME" },
         { id: "about", label: "02 ABOUT" },
-        { id: "services", label: "03 SERVICES" },
-        { id: "gear", label: "04 GEAR" },
-        { id: "contact", label: "05 CONTACT" },
+        { id: "contact", label: "03 CONTACT" },
       ];
     } else if (pathname === "/work") {
       return [
-        { id: "work-list", label: "01 WORK" },
-        { id: "reels", label: "02 REELS" },
+        { id: "work-list-fashion & events", label: "01 FASHION" },
+        { id: "work-list-food & beverage", label: "02 FOOD" },
+        { id: "work-list-automotive", label: "03 AUTO" },
+        { id: "work-list-commercial & brand", label: "04 BRAND" },
       ];
     } else if (pathname.startsWith("/work/")) {
       return [
@@ -68,24 +68,27 @@ export default function TimelineHUD() {
 
   const scenes = getScenesForRoute();
 
+  const getAbsoluteY = (id: string) => {
+    const el = typeof document !== 'undefined' ? document.getElementById(id) : null;
+    if (!el) return 0;
+    return el.getBoundingClientRect().top + window.scrollY;
+  };
+
   // Measure offsets of elements on resize or route transition
   useEffect(() => {
     const measure = () => {
       const scrollMax = document.documentElement.scrollHeight - window.innerHeight;
-      const aboutEl = document.getElementById("about");
-      const servicesEl = document.getElementById("services");
-      const gearEl = document.getElementById("gear");
-      const contactEl = document.getElementById("contact");
-      const reelsEl = document.getElementById("reels");
-      const btsEl = document.getElementById("bts-grid");
-
+      
       offsetsRef.current = {
-        about: aboutEl ? aboutEl.offsetTop : scrollMax * 0.25,
-        services: servicesEl ? servicesEl.offsetTop : scrollMax * 0.5,
-        gear: gearEl ? gearEl.offsetTop : scrollMax * 0.7,
-        contact: contactEl ? contactEl.offsetTop : scrollMax * 0.85,
-        reels: reelsEl ? reelsEl.offsetTop : scrollMax * 0.6,
-        bts: btsEl ? btsEl.offsetTop : scrollMax * 0.5,
+        about: getAbsoluteY("about") || scrollMax * 0.25,
+        contact: getAbsoluteY("contact") || scrollMax * 0.85,
+        bts: getAbsoluteY("bts-grid") || scrollMax * 0.5,
+        workSections: [
+          getAbsoluteY("work-list-fashion & events") || 0,
+          getAbsoluteY("work-list-food & beverage") || scrollMax * 0.25,
+          getAbsoluteY("work-list-automotive") || scrollMax * 0.5,
+          getAbsoluteY("work-list-commercial & brand") || scrollMax * 0.75,
+        ],
         maxScroll: scrollMax > 0 ? scrollMax : 1,
       };
     };
@@ -119,14 +122,10 @@ export default function TimelineHUD() {
         // Homepage interpolation targets:
         // Hero top (y=0) -> 00:00:00:00 (0 frames)
         // About top (y=yAbout) -> 00:00:45:12 (1092 frames)
-        // Services top (y=yServices) -> 00:01:12:08 (1736 frames)
-        // Gear top (y=yGear) -> 00:02:00:00 (2880 frames) (Intermediate interpolation)
         // Contact top (y=yContact) -> 00:03:15:10 (4690 frames)
         // Page End (y=maxScroll) -> 00:03:30:00 (5040 frames)
         const fHero = 0;
         const fAbout = 1092;
-        const fServices = 1736;
-        const fGear = 2880;
         const fContact = 4690;
         const fEnd = 5040;
 
@@ -134,39 +133,28 @@ export default function TimelineHUD() {
           const ratio = offsets.about > 0 ? y / offsets.about : 0;
           calculatedFrames = fHero + ratio * (fAbout - fHero);
           activeIdx = 0;
-        } else if (y < offsets.services) {
-          const ratio = (y - offsets.about) / (offsets.services - offsets.about);
-          calculatedFrames = fAbout + ratio * (fServices - fAbout);
-          activeIdx = 1;
-        } else if (y < offsets.gear) {
-          const ratio = (y - offsets.services) / (offsets.gear - offsets.services);
-          calculatedFrames = fServices + ratio * (fGear - fServices);
-          activeIdx = 2;
         } else if (y < offsets.contact) {
-          const ratio = (y - offsets.gear) / (offsets.contact - offsets.gear);
-          calculatedFrames = fGear + ratio * (fContact - fGear);
-          activeIdx = 3;
+          const ratio = (y - offsets.about) / (offsets.contact - offsets.about);
+          calculatedFrames = fAbout + ratio * (fContact - fAbout);
+          activeIdx = 1;
         } else {
           const ratio = maxScroll - offsets.contact > 0 ? (y - offsets.contact) / (maxScroll - offsets.contact) : 0;
           calculatedFrames = fContact + Math.min(1, ratio) * (fEnd - fContact);
-          activeIdx = 4;
+          activeIdx = 2;
         }
       } else if (pathname === "/work") {
-        // Work Listing Page:
-        // Scroll progress maps from 00:02:24:18 (3474 frames) to 00:03:00:00 (4320 frames)
-        // Reels top (y=yReels) -> 00:02:45:00 (3960 frames)
         const fWorkStart = 3474;
-        const fReelsStart = 3960;
         const fWorkEnd = 4320;
-
-        if (y < offsets.reels) {
-          const ratio = offsets.reels > 0 ? y / offsets.reels : 0;
-          calculatedFrames = fWorkStart + ratio * (fReelsStart - fWorkStart);
-          activeIdx = 0;
-        } else {
-          const ratio = maxScroll - offsets.reels > 0 ? (y - offsets.reels) / (maxScroll - offsets.reels) : 0;
-          calculatedFrames = fReelsStart + Math.min(1, ratio) * (fWorkEnd - fReelsStart);
-          activeIdx = 1;
+        
+        const ratio = maxScroll > 0 ? y / maxScroll : 0;
+        calculatedFrames = fWorkStart + ratio * (fWorkEnd - fWorkStart);
+        
+        activeIdx = 0;
+        for (let i = offsets.workSections.length - 1; i >= 0; i--) {
+           if (y >= offsets.workSections[i] - 300) {
+              activeIdx = i;
+              break;
+           }
         }
       } else if (pathname.startsWith("/work/")) {
         // Case Study Page:
@@ -267,10 +255,9 @@ export default function TimelineHUD() {
           <div className="w-full h-[2px] bg-stroke relative rounded-full">
             {/* Scene Markers on Track */}
             {scenes.map((scene, i) => {
-              const el = typeof document !== 'undefined' ? document.getElementById(scene.id) : null;
               const maxScroll = offsetsRef.current?.maxScroll || 1;
-              const offsetTop = el ? el.offsetTop : 0;
-              const percent = maxScroll > 0 ? (offsetTop / maxScroll) * 100 : 0;
+              const absY = getAbsoluteY(scene.id);
+              const percent = maxScroll > 0 ? (absY / maxScroll) * 100 : 0;
               
               if (percent === 0 && i !== 0) return null; // hide if not found
               
@@ -308,12 +295,20 @@ export default function TimelineHUD() {
                   key={scene.id} 
                   onClick={() => {
                     if (scene.id === "hero") {
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      if (lenis) {
+                        lenis.scrollTo(0, { duration: 1.2 });
+                      } else {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
                       return;
                     }
                     const el = document.getElementById(scene.id);
                     if (el) {
-                      el.scrollIntoView({ behavior: "smooth" });
+                      if (lenis) {
+                        lenis.scrollTo(el, { duration: 1.2, offset: -50 });
+                      } else {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      }
                     }
                   }}
                   className={`${isActive ? "flex" : "hidden sm:flex"} items-center gap-1.5 text-[9px] uppercase tracking-[0.15em] transition-all duration-300 cursor-pointer ${

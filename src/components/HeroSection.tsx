@@ -241,8 +241,7 @@ export default function HeroSection() {
 
             <div className="flex flex-row justify-between w-full sm:w-auto sm:justify-start sm:gap-12 pointer-events-auto">
               <AnimatedStat target={120} suffix="+" label="Projects Delivered" />
-              <AnimatedStat target={15} suffix="M+" label="Views Generated" />
-              <AnimatedStat target={5} suffix="+" label="Years Experience" />
+              <AnimatedStat target={6} suffix="+" label="Years Experience" />
             </div>
           </div>
 

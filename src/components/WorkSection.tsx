@@ -4,14 +4,98 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Play } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { PROJECTS } from "@/data/projects";
+import { ProjectData } from "@/data/projects";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function WorkSection() {
+function WorkCard({ project }: { project: ProjectData }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isPlaying) {
+      v.pause();
+      setIsPlaying(false);
+    } else {
+      v.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div
+      className="work-card group bg-surface border border-stroke rounded-lg overflow-hidden cursor-pointer transition-colors duration-200 hover:border-white/20 block"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={togglePlay}
+    >
+      {/* Thumbnail */}
+      <div className="aspect-[9/16] bg-raised relative flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-[#111]" />
+        
+        {project.video ? (
+          <video
+            ref={videoRef}
+            src={project.video}
+            playsInline
+            loop
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100 z-30 bg-black' : 'opacity-60'}`}
+            onEnded={() => setIsPlaying(false)}
+            onPause={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
+          />
+        ) : (
+          project.poster && (
+            <Image 
+              src={project.poster} 
+              alt={project.name} 
+              fill
+              className="object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-300" 
+            />
+          )
+        )}
+        
+        <span className={`z-10 text-[9px] uppercase tracking-wider text-faint mix-blend-difference drop-shadow-md transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}>
+          {project.category.split("·")[0].trim()}
+        </span>
+        
+        {!isPlaying && (
+          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 z-20 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+              <Play className="w-5 h-5 text-white fill-white ml-0.5 drop-shadow-md" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="px-3 pt-2 pb-3 flex justify-between items-start">
+        <div>
+          <h3 className="text-[13px] text-text/80 font-medium leading-snug">
+            {project.name}
+          </h3>
+          <p className="text-[10px] text-faint mt-0.5">
+            {project.category}
+          </p>
+        </div>
+        <span className="text-[10px] text-ghost">{project.year}</span>
+      </div>
+    </div>
+  );
+}
+
+interface WorkSectionProps {
+  title: string;
+  projects: ProjectData[];
+  sceneNumber: string;
+}
+
+export default function WorkSection({ title, projects, sceneNumber }: WorkSectionProps) {
   const containerRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
@@ -22,15 +106,12 @@ export default function WorkSection() {
     const marker = containerRef.current.querySelector(".scene-marker");
     const isWorkPage = pathname === "/work";
 
-    // Track only THIS component's ScrollTriggers so we don't nuke TimelineHUD's
     const triggers: ScrollTrigger[] = [];
 
     if (isWorkPage) {
-      // On /work page: instant reveal, no blur delay — content should feel immediate
       gsap.set(grid, { opacity: 1, y: 0 });
       gsap.set(marker, { opacity: 0.35, y: 0 });
 
-      // Subtle fade-up only (no blur), short duration
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
       if (marker) {
@@ -48,7 +129,6 @@ export default function WorkSection() {
         );
       }
     } else {
-      // On home page: ScrollTriggered with blur (fine here since user scrolls to it)
       if (grid) {
         const st = ScrollTrigger.create({
           trigger: containerRef.current,
@@ -80,16 +160,15 @@ export default function WorkSection() {
       }
     }
 
-    // Only kill THIS component's triggers — never all triggers globally
     return () => {
       triggers.forEach(t => t.kill());
     };
   }, [pathname]);
 
-  const displayProjects = PROJECTS.slice(0, 3);
+  if (projects.length === 0) return null;
 
   return (
-    <section id="work-list" ref={containerRef} className="py-16 px-4 sm:px-6 md:px-12 relative overflow-hidden">
+    <section id={`work-list-${title.toLowerCase()}`} ref={containerRef} className="py-16 px-4 sm:px-6 md:px-12 relative overflow-hidden">
       
       {/* Editorial Easter Egg */}
       <div className="absolute bottom-4 right-8 text-[8px] uppercase tracking-[0.2em] text-muted/15 font-mono select-none pointer-events-none">
@@ -99,66 +178,25 @@ export default function WorkSection() {
       <div className="relative z-10 max-w-[1200px] mx-auto">
         {/* Screenplay Scene Marker */}
         <div className="scene-marker opacity-0 flex items-center gap-2 text-[9px] tracking-[0.25em] uppercase font-mono mb-6 text-muted select-none">
-          <span>SCENE 04</span>
+          <span>{sceneNumber}</span>
           <span className="w-1 h-1 rounded-full bg-purple-500/50" />
-          <span>SELECTED WORK</span>
+          <span>{title.toUpperCase()}</span>
         </div>
 
         <div className="flex justify-between items-baseline mb-10 gap-4 min-w-0">
           <h2 className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted">
-            Selected work
+            {title}
           </h2>
           <span className="text-[10px] text-ghost">
-            {displayProjects.length < 10 ? `0${displayProjects.length}` : displayProjects.length} projects
+            {projects.length < 10 ? `0${projects.length}` : projects.length} projects
           </span>
         </div>
 
-        <div className="work-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {displayProjects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/work/${project.slug}`}
-              prefetch={true}
-              className="work-card group bg-surface border border-stroke rounded-lg overflow-hidden cursor-pointer transition-colors duration-200 hover:border-white/20 block"
-            >
-              {/* Thumbnail */}
-              <div className="aspect-video bg-raised relative flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-[#111]" />
-                {project.poster && (
-                  <Image 
-                    src={project.poster} 
-                    alt={project.name} 
-                    fill
-                    className="object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-300" 
-                  />
-                )}
-                
-
-                
-                <span className="z-10 text-[9px] uppercase tracking-wider text-faint mix-blend-difference drop-shadow-md">
-                  {project.category.split("·")[0].trim()}
-                </span>
-                
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-                  <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
-                    <Play className="w-5 h-5 text-white fill-white ml-0.5 drop-shadow-md" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="px-3 pt-2 pb-3 flex justify-between items-start">
-                <div>
-                  <h3 className="text-[13px] text-text/80 font-medium leading-snug">
-                    {project.name}
-                  </h3>
-                  <p className="text-[10px] text-faint mt-0.5">
-                    {project.category}
-                  </p>
-                </div>
-                <span className="text-[10px] text-ghost">{project.year}</span>
-              </div>
-            </Link>
+        <div className="work-grid flex overflow-x-auto snap-x snap-mandatory gap-6 md:gap-8 pb-10 pt-4 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar">
+          {projects.map((project) => (
+            <div key={project.id} className="w-[60vw] sm:w-[50vw] md:w-[360px] shrink-0 snap-center">
+              <WorkCard project={project} />
+            </div>
           ))}
         </div>
       </div>

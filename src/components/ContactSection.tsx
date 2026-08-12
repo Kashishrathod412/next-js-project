@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Send } from "lucide-react";
@@ -10,16 +10,34 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function ContactSection() {
   const containerRef = useRef<HTMLElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await emailjs.sendForm(
-      'YOUR_SERVICE_ID',
-      'YOUR_TEMPLATE_ID', 
-      e.target as HTMLFormElement,
-      'YOUR_PUBLIC_KEY'
-    );
-    // show success state
+    setIsSubmitting(true);
+    setErrorMsg("");
+    
+    try {
+      // Using environment variables for EmailJS credentials
+      await emailjs.sendForm(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '',
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '', 
+        e.target as HTMLFormElement,
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || ''
+      );
+      setIsSuccess(true);
+      (e.target as HTMLFormElement).reset();
+      
+      // Reset success message after 5 seconds
+      setTimeout(() => setIsSuccess(false), 5000);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -106,6 +124,8 @@ export default function ContactSection() {
               </label>
               <input
                 type="text"
+                name="user_name"
+                required
                 placeholder="John Doe"
                 className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
               />
@@ -118,6 +138,8 @@ export default function ContactSection() {
               </label>
               <input
                 type="email"
+                name="user_email"
+                required
                 placeholder="john@example.com"
                 className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
               />
@@ -131,6 +153,7 @@ export default function ContactSection() {
             </label>
             <input
               type="text"
+              name="project_type"
               placeholder="Commercial, Wedding, Music Video..."
               className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
             />
@@ -142,19 +165,30 @@ export default function ContactSection() {
               Message
             </label>
             <textarea
+              name="message"
+              required
               placeholder="Tell me about your vision..."
               className="bg-transparent text-text/70 text-[13px] outline-none w-full min-h-[80px] sm:min-h-[96px] placeholder:text-ghost resize-y"
             />
           </div>
 
+          {/* Status Messages */}
+          {isSuccess && (
+            <p className="text-green-500 text-xs mb-3">Message sent successfully! I'll get back to you soon.</p>
+          )}
+          {errorMsg && (
+            <p className="text-red-500 text-xs mb-3">{errorMsg}</p>
+          )}
+
           {/* CTA Button */}
           <div>
             <button
               type="submit"
-              className="bg-white text-bg text-xs uppercase tracking-[0.06em] font-medium px-6 py-3.5 rounded-lg mt-1 inline-flex justify-center items-center gap-2.5 hover:opacity-[0.88] transition-opacity w-full sm:w-auto"
+              disabled={isSubmitting}
+              className="bg-white text-bg text-xs uppercase tracking-[0.06em] font-medium px-6 py-3.5 rounded-lg mt-1 inline-flex justify-center items-center gap-2.5 hover:opacity-[0.88] transition-opacity w-full sm:w-auto disabled:opacity-50"
             >
               <Send className="w-[14px] h-[14px]" />
-              Send enquiry
+              {isSubmitting ? "Sending..." : "Send enquiry"}
             </button>
           </div>
         </form>

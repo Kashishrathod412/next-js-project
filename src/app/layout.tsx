@@ -4,6 +4,9 @@ import TimelineHUD from "@/components/TimelineHUD";
 import GlobalSweep from "@/components/GlobalSweep";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import SmoothScrolling from "@/components/SmoothScrolling";
+import GlobalLoading from "@/components/GlobalLoading";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import InstagramButton from "@/components/InstagramButton";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -30,15 +33,18 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark">
       <body className={`${inter.variable} ${instrument.variable} bg-bg text-text antialiased`}>
-        <TimelineHUD />
-        <GlobalSweep />
-        <div className="relative z-10 pb-20 md:pb-32">
-          <SmoothScrolling>
+        <SmoothScrolling>
+          <GlobalLoading />
+          <TimelineHUD />
+          <GlobalSweep />
+          <WhatsAppButton />
+          <InstagramButton />
+          <div className="relative z-10 pb-20 md:pb-32">
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
-          </SmoothScrolling>
-        </div>
+          </div>
+        </SmoothScrolling>
       </body>
     </html>
   );

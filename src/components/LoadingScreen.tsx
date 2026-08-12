@@ -22,10 +22,13 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     }, intervalTime);
 
     // Progress bar and counter logic
-    const startTime = performance.now();
+    let startTime: number | null = null;
     let animationFrameId: number;
     
     const updateProgress = (currentTime: number) => {
+      if (startTime === null) {
+        startTime = currentTime;
+      }
       const elapsed = currentTime - startTime;
       const nextProgress = Math.min((elapsed / DURATION_MS) * 100, 100);
       
@@ -76,15 +79,15 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       </motion.div>
 
       {/* Center Words */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex items-center justify-center min-h-[120px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentWord}
-            initial={{ opacity: 0, y: 20, filter: "blur(8px)", scale: 0.95 }}
+            initial={{ opacity: 0, y: 10, filter: "blur(4px)", scale: 0.98 }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
-            exit={{ opacity: 0, y: -20, filter: "blur(8px)", scale: 1.05 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="text-6xl md:text-8xl font-display italic text-white tracking-tight drop-shadow-2xl"
+            exit={{ opacity: 0, y: -10, filter: "blur(4px)", scale: 1.02 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="text-6xl md:text-8xl font-display italic text-white tracking-tight drop-shadow-2xl absolute"
           >
             {WORDS[currentWord]}
           </motion.div>

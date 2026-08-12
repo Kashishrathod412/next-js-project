@@ -8,18 +8,14 @@ import {
   Camera, 
   Scissors, 
   Palette, 
-  AudioWaveform, 
-  Plane, 
-  Aperture 
+  AudioWaveform
 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const STATS = [
   { value: "120+", label: "Projects" },
-  { value: "14", label: "Countries" },
   { value: "6", label: "Years" },
-  { value: "3", label: "Awards" },
 ];
 
 const SKILLS = [
@@ -27,8 +23,6 @@ const SKILLS = [
   { name: "Editing", icon: Scissors },
   { name: "Colour grade", icon: Palette },
   { name: "Sound design", icon: AudioWaveform },
-  { name: "Aerial & drone", icon: Plane },
-  { name: "Photography", icon: Aperture },
 ];
 
 export default function AboutSection() {
@@ -126,9 +120,9 @@ export default function AboutSection() {
         {/* Left Column: Profile Photo */}
         <div className="w-full aspect-[4/5] border border-stroke rounded-2xl relative overflow-hidden group">
           <img 
-            src="/IMG_9195.JPG" 
+            src="/IMG_6180 8.JPG" 
             alt="My Profile" 
-            className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+            className="w-full h-full object-cover transition-all duration-700"
           />
         </div>
 
@@ -143,15 +137,23 @@ export default function AboutSection() {
           </div>
 
           <p className="text-[10px] uppercase tracking-[0.12em] text-faint mb-4">
-            About me
+            About Me
           </p>
-          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-text/90 mb-6">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-text mb-2">
+            Dhruvil Naidu
+          </h2>
+          <h3 className="text-4xl md:text-5xl font-medium tracking-tight text-text/90 mb-6">
             6 years behind the{" "}
             <em className="font-display italic text-text font-normal">lens.</em>
-          </h2>
-          <p className="text-[14px] text-muted leading-relaxed max-w-lg mb-10">
-            I shoot and edit films for brands, couples, and artists — obsessing over light, pacing, and the moments between moments. Based in New York, working worldwide.
-          </p>
+          </h3>
+          <div className="text-[14px] text-muted leading-relaxed max-w-lg mb-10 space-y-4">
+            <p>
+              I am a passionate filmmaker, cinematographer, and editor dedicated to crafting visual stories that leave a lasting impact. My journey began with a fascination for how light, shadow, and movement can evoke deep emotions and tell compelling narratives.
+            </p>
+            <p>
+              Over the last six years, I've had the privilege of shooting and editing for a diverse range of clients, from commercial campaigns to intimate documentaries. I obsess over pacing, cinematic color grading, and finding the raw beauty in the moments between moments. Always ready to travel and bring unique visions to life, frame by frame.
+            </p>
+          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-full mb-12">
             {STATS.map((stat, i) => (
