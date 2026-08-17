@@ -20,12 +20,19 @@ export default function GlobalLoading() {
 
   // Lock body scroll while loading
   useEffect(() => {
+    if (pathname?.startsWith("/admin")) {
+      document.body.style.overflow = "";
+      return;
+    }
+
     if (!loadingComplete) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
-  }, [loadingComplete]);
+  }, [loadingComplete, pathname]);
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <AnimatePresence>

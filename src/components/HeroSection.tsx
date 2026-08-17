@@ -6,7 +6,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import { Play, X, Volume2, VolumeX, Maximize } from "lucide-react";
-import { REELS } from "@/data/projects";
 
 const CanvasParticles = dynamic(() => import("./CanvasParticles"), { ssr: false });
 const CursorGlow = dynamic(() => import("./CursorGlow"), { ssr: false });
@@ -74,7 +73,7 @@ function AnimatedStat({ target, suffix, label }: { target: number, suffix: strin
 
 const CATEGORIES = ["ALL", "COMMERCIAL", "FASHION", "PRODUCT", "SOCIAL", "TRAVEL"];
 
-export default function HeroSection() {
+export default function HeroSection({ initialReels = [] }: { initialReels?: any[] }) {
   const containerRef = useRef<HTMLElement>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
@@ -88,8 +87,8 @@ export default function HeroSection() {
     setIsMounted(true);
   }, []);
 
-  // Filter reels
-  const filteredReels = REELS.filter(r => activeCategory === "ALL" || r.category.toUpperCase().includes(activeCategory)).slice(0, 5);
+  // Filter reels (using the dynamic data)
+  const filteredReels = initialReels.filter(r => activeCategory === "ALL" || (r.category && r.category.toUpperCase().includes(activeCategory))).slice(0, 5);
 
   // Mouse Parallax for 3D Stack
   const mouseX = useMotionValue(0);
@@ -101,6 +100,27 @@ export default function HeroSection() {
 
   const rotateX = useTransform(springY, [-500, 500], [8, -8]);
   const rotateY = useTransform(springX, [-500, 500], [-8, 8]);
+
+  const [centerOffset, setCenterOffset] = useState(0);
+
+  useEffect(() => {
+    const updateOffset = () => {
+      if (typeof window !== 'undefined' && containerRef.current) {
+        const rightSide = containerRef.current.querySelector('.perspective-\\[1200px\\]');
+        if (rightSide) {
+          const rect = rightSide.getBoundingClientRect();
+          const rightSideCenter = rect.left + rect.width / 2;
+          const screenCenter = window.innerWidth / 2;
+          setCenterOffset(screenCenter - rightSideCenter);
+        }
+      }
+    };
+    
+    // Initial calculation after a small delay to ensure layout is complete
+    setTimeout(updateOffset, 100);
+    window.addEventListener('resize', updateOffset);
+    return () => window.removeEventListener('resize', updateOffset);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -288,7 +308,7 @@ export default function HeroSection() {
                         opacity: isAnotherActive ? 0 : 1,
                         z: isActive ? 300 : isSpread ? spreadZ : -stackDepth,
                         y: isActive ? 0 : isSpread ? spreadY : stackY,
-                        x: isActive ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? "-25vw" : "0%") : isSpread ? spreadX : 0,
+                        x: isActive ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? centerOffset : 0) : isSpread ? spreadX : 0,
                         scale: isActive ? 1.2 : isHovered && !isSpread ? stackScale * 1.05 : isSpread ? 0.9 : stackScale,
                         rotateZ: isActive ? 0 : isSpread ? spreadRotate : index % 2 === 0 ? 2 : -2,
                         filter: isAnotherActive ? 'blur(10px) brightness(0.4)' : isHovered ? 'brightness(1.2)' : 'brightness(1)',
@@ -320,14 +340,14 @@ export default function HeroSection() {
                         }
                       }}
                     >
-                      <div className="absolute inset-0" style={{ background: reel.pattern, opacity: 0.4 }} />
+                      <div className="absolute inset-0" style={{ background: '#111', opacity: 0.4 }} />
                       
-                      {isMounted && reel.video && (
+                      {isMounted && (reel.video_url || reel.video) && (
                         <video
                           ref={el => { videoRefs.current[index] = el; }}
-                          src={reel.video}
+                          src={reel.video_url || reel.video}
                           poster={reel.poster}
-                          preload="none"
+                          preload="metadata"
                           autoPlay={isActive}
                           loop
                           muted={isActive ? isMuted : true}
@@ -345,14 +365,14 @@ export default function HeroSection() {
                             <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
                               <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
                             </div>
-                            <span className="text-white/90 text-xs font-medium tracking-wide drop-shadow-md">
-                              {reel.name}
+                            <span className="text-white/90 text-xs font-medium tracking-wide drop-shadow-md line-clamp-1">
+                              {reel.caption || reel.name || 'Untitled'}
                             </span>
                           </div>
                           <div>
                             <h3 className="text-white font-medium text-lg mb-1 leading-tight drop-shadow-md">{reel.category}</h3>
                             <p className="text-white/60 text-[10px] uppercase tracking-wider">
-                              0:45 • Cinematic Edit
+                              {reel.created_at ? new Date(reel.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '0:45'}
                             </p>
                           </div>
                         </div>
@@ -377,7 +397,7 @@ export default function HeroSection() {
                           <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex items-center justify-between z-[60]"
                                onClick={(e) => e.stopPropagation()}>
                             <div>
-                              <div className="text-white font-medium text-sm">{reel.name}</div>
+                              <div className="text-white font-medium text-sm line-clamp-1">{reel.caption || reel.name || 'Untitled'}</div>
                               <div className="text-white/60 text-[10px] uppercase tracking-widest mt-0.5">{reel.category}</div>
                             </div>
                             <div className="flex items-center gap-3">

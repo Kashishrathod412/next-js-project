@@ -10,7 +10,7 @@ import { ProjectData } from "@/data/projects";
 
 gsap.registerPlugin(ScrollTrigger);
 
-function WorkCard({ project }: { project: ProjectData }) {
+function WorkCard({ project }: { project: any }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -35,25 +35,29 @@ function WorkCard({ project }: { project: ProjectData }) {
       onClick={togglePlay}
     >
       {/* Thumbnail */}
-      <div className="aspect-[9/16] bg-raised relative flex items-center justify-center overflow-hidden">
+      <div className={`${project.orientation === 'vertical' ? 'aspect-[9/16]' : 'aspect-[9/16] md:aspect-[4/3]'} bg-raised relative flex items-center justify-center overflow-hidden`}>
         <div className="absolute inset-0 bg-[#111]" />
         
-        {project.video ? (
+        {project.video_url || project.video ? (
           <video
             ref={videoRef}
-            src={project.video}
+            src={project.video_url || project.video}
             playsInline
             loop
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100 z-30 bg-black' : 'opacity-60'}`}
+            controls={isPlaying}
+            onClick={(e) => {
+              if (isPlaying) e.stopPropagation();
+            }}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100 z-30 bg-black pointer-events-auto' : 'opacity-60 pointer-events-none'}`}
             onEnded={() => setIsPlaying(false)}
             onPause={() => setIsPlaying(false)}
             onPlay={() => setIsPlaying(true)}
           />
         ) : (
-          project.poster && (
+          (project.poster) && (
             <Image 
               src={project.poster} 
-              alt={project.name} 
+              alt={project.caption || project.name} 
               fill
               className="object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-300" 
             />
@@ -61,7 +65,7 @@ function WorkCard({ project }: { project: ProjectData }) {
         )}
         
         <span className={`z-10 text-[9px] uppercase tracking-wider text-faint mix-blend-difference drop-shadow-md transition-opacity duration-300 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}>
-          {project.category.split("·")[0].trim()}
+          {project.category?.split("·")[0].trim() || 'VIDEO'}
         </span>
         
         {!isPlaying && (
@@ -76,14 +80,16 @@ function WorkCard({ project }: { project: ProjectData }) {
       {/* Info */}
       <div className="px-3 pt-2 pb-3 flex justify-between items-start">
         <div>
-          <h3 className="text-[13px] text-text/80 font-medium leading-snug">
-            {project.name}
+          <h3 className="text-[13px] text-text/80 font-medium leading-snug line-clamp-1">
+            {project.caption || project.name || 'Untitled'}
           </h3>
           <p className="text-[10px] text-faint mt-0.5">
             {project.category}
           </p>
         </div>
-        <span className="text-[10px] text-ghost">{project.year}</span>
+        <span className="text-[10px] text-ghost">
+          {project.created_at ? new Date(project.created_at).getFullYear() : project.year}
+        </span>
       </div>
     </div>
   );

@@ -187,7 +187,7 @@ export default function TimelineHUD() {
   // Bottom wave animation bars
   const barCount = 50;
 
-  if (!mounted) return null;
+  if (!mounted || pathname.startsWith("/admin")) return null;
 
   return (
     <>

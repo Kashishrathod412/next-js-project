@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { usePathname } from "next/navigation";
 
 export default function GlobalSweep() {
   const sweepRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!sweepRef.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || pathname.startsWith("/admin") || !sweepRef.current) return;
     const layers = sweepRef.current.querySelectorAll('.sweep-layer');
     
     gsap.fromTo(layers,
@@ -25,7 +32,9 @@ export default function GlobalSweep() {
       gsap.killTweensOf(layers);
       Array.from(layers).forEach(l => ((l as HTMLElement).style.willChange = "auto"));
     };
-  }, []);
+  }, [mounted, pathname]);
+
+  if (!mounted || pathname.startsWith("/admin")) return null;
 
   return (
     <div ref={sweepRef} className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none flex items-center justify-center mix-blend-screen">

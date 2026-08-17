@@ -1,17 +1,32 @@
-"use client";
-
 import Navigation from "@/components/Navigation";
 import WorkSection from "@/components/WorkSection";
 import { ArrowLeft } from "lucide-react";
-import { PROJECTS } from "@/data/projects";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/server";
 
-export default function WorkPage() {
-  // Group projects by category
-  const fashionProjects = PROJECTS.filter(p => p.category.toLowerCase().includes('fashion'));
-  const foodProjects = PROJECTS.filter(p => p.category.toLowerCase().includes('food'));
-  const carProjects = PROJECTS.filter(p => p.category.toLowerCase().includes('car'));
-  const commercialProjects = PROJECTS.filter(p => p.category.toLowerCase().includes('commercial'));
+export default async function WorkPage() {
+  const supabase = createClient();
+  
+  // Fetch videos for the Work Page
+  const { data: videos } = await supabase
+    .from('videos')
+    .select('*')
+    .in('placement', ['work_page', 'both'])
+    .order('created_at', { ascending: false });
+
+  const safeVideos = videos || [];
+
+  // Dynamically group projects by category
+  const groupedVideos = safeVideos.reduce((acc: any, video: any) => {
+    const category = video.category || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(video);
+    return acc;
+  }, {});
+
+  const categories = Object.keys(groupedVideos).sort();
 
   return (
     <main className="min-h-screen text-text pt-20 sm:pt-24 pb-32 relative overflow-hidden">
@@ -43,22 +58,26 @@ export default function WorkPage() {
           <div className="flex gap-12 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Total Projects</div>
-              <div className="text-2xl font-medium">{PROJECTS.length < 10 ? `0${PROJECTS.length}` : PROJECTS.length}</div>
+              <div className="text-2xl font-medium">{safeVideos.length < 10 ? `0${safeVideos.length}` : safeVideos.length}</div>
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted mb-2">Categories</div>
-              <div className="text-2xl font-medium">04</div>
+              <div className="text-2xl font-medium">{categories.length < 10 ? `0${categories.length}` : categories.length}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Render sections with distinct scene numbers */}
+      {/* Render sections dynamically */}
       <div className="flex flex-col gap-12 md:gap-24 relative z-10">
-        <WorkSection title="Fashion & Events" projects={fashionProjects} sceneNumber="SCENE 01" />
-        <WorkSection title="Food & Beverage" projects={foodProjects} sceneNumber="SCENE 02" />
-        <WorkSection title="Automotive" projects={carProjects} sceneNumber="SCENE 03" />
-        <WorkSection title="Commercial & Brand" projects={commercialProjects} sceneNumber="SCENE 04" />
+        {categories.map((category, index) => (
+          <WorkSection 
+            key={category}
+            title={category} 
+            projects={groupedVideos[category] as any} 
+            sceneNumber={`SCENE 0${index + 1}`} 
+          />
+        ))}
       </div>
     </main>
   );
