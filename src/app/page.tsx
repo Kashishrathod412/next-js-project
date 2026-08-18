@@ -19,7 +19,7 @@ export default async function Home() {
   return (
     <main>
       <Navigation />
-      <HeroSection initialReels={safeVideos as any} />
+      <HeroSection initialReels={safeVideos} />
       <AboutSection />
       <ContactSection />
     </main>

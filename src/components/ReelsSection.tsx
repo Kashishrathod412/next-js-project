@@ -197,11 +197,13 @@ export default function ReelsSection() {
 
   const [trackWidth, setTrackWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [hovered, setHovered] = useState(false);
   const [clickable, setClickable] = useState(true);
 
   // Responsive: Always use 3 slots to allow for side-card peeking, but we change the item width below.
-  const getVisibleCount = (w: number) => {
+  const getVisibleCount = () => {
     return 3;
   };
 
@@ -215,7 +217,7 @@ export default function ReelsSection() {
       const w = entries[0]?.contentRect.width;
       if (w) {
         setTrackWidth(w);
-        setVisibleCount(getVisibleCount(w));
+        setVisibleCount(getVisibleCount());
       }
     });
     ro.observe(trackRef.current);
@@ -250,7 +252,8 @@ export default function ReelsSection() {
         animating.current = false;
       },
     });
-  }, [itemWidth, x]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemWidth, x, SPRING]);
 
   const goNext = useCallback(() => slide(1), [slide]);
   const goPrev = useCallback(() => slide(-1), [slide]);

@@ -16,7 +16,7 @@ export default async function WorkPage() {
 
   const safeVideos = videos || [];
 
-  // Dynamically group projects by category
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupedVideos = safeVideos.reduce((acc: any, video: any) => {
     const category = video.category || 'Other';
     if (!acc[category]) {
@@ -49,8 +49,10 @@ export default async function WorkPage() {
               <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
               Back to Home
             </Link>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-medium tracking-tight mb-4">Selected <span className="text-muted">Works.</span></h1>
-            <p className="text-muted max-w-md text-sm md:text-base leading-relaxed">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-7xl font-deltha tracking-tight mb-4 whitespace-nowrap uppercase">
+              Selected <span className="text-muted">Work.</span>
+            </h1>
+            <p className="text-muted max-w-md text-sm md:text-base leading-relaxed font-equinox tracking-wide uppercase">
               A curated collection of my favorite projects, ranging from high-end fashion campaigns to cinematic automotive pieces.
             </p>
           </div>
@@ -74,7 +76,7 @@ export default async function WorkPage() {
           <WorkSection 
             key={category}
             title={category} 
-            projects={groupedVideos[category] as any} 
+            projects={groupedVideos[category]} 
             sceneNumber={`SCENE 0${index + 1}`} 
           />
         ))}

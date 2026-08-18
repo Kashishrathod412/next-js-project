@@ -1,14 +1,41 @@
 "use client"
 
-import { login } from './actions'
-import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Lock, Mail, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
 
 function LoginForm() {
   const searchParams = useSearchParams()
-  const message = searchParams.get('message')
+  const router = useRouter()
+  const initialMessage = searchParams.get('message')
+  const [message, setMessage] = useState<string | null>(initialMessage)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setMessage(null)
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      setMessage(error.message)
+      setIsLoading(false)
+    } else {
+      router.refresh()
+      router.push('/admin/dashboard')
+    }
+  }
 
   return (
     <motion.div 
@@ -53,7 +80,7 @@ function LoginForm() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="text-2xl font-semibold tracking-tight text-white mb-2"
         >
-          Dhruvil's Portfolio
+          Dhruvil&apos;s Portfolio
         </motion.h1>
         
         <motion.p 
@@ -66,7 +93,7 @@ function LoginForm() {
         </motion.p>
       </div>
       
-      <form className="flex flex-col gap-4 sm:gap-5 relative z-10">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5 relative z-10">
         
         {/* Email Field */}
         <motion.div 
@@ -136,11 +163,18 @@ function LoginForm() {
           className="w-full mt-4"
         >
           <button
-            formAction={login}
-            className="group relative flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 sm:py-4 bg-white text-black font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+            type="submit"
+            disabled={isLoading}
+            className="group relative flex items-center justify-center gap-2 w-full rounded-xl px-6 py-3.5 sm:py-4 bg-white text-black font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
           >
-            <span>Sign In to Dashboard</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <span>Sign In to Dashboard</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </motion.div>
         
@@ -151,7 +185,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4 bg-[#050505] relative overflow-hidden selection:bg-purple-500/30">
+    <div className="min-h-screen w-full flex items-center justify-center px-4 bg-[#050505] relative overflow-hidden selection:bg-purple-500/30 font-sans tracking-normal">
       
       {/* Animated Ambient Background Effects */}
       <div className="absolute inset-0 pointer-events-none">

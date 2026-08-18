@@ -21,6 +21,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "sans-serif"],
         display: ["var(--font-instrument)", "serif"],
+        deltha: ["var(--font-deltha)", "sans-serif"],
+        equinox: ["var(--font-equinox)", "sans-serif"],
       },
     },
   },

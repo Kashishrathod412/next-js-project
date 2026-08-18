@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -136,7 +137,7 @@ export default function AboutSection() {
             <span>THE STORY</span>
           </div>
 
-          <p className="text-[10px] uppercase tracking-[0.12em] text-faint mb-4">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-faint mb-4 font-sans">
             About Me
           </p>
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-text mb-2">
@@ -146,12 +147,12 @@ export default function AboutSection() {
             6 years behind the{" "}
             <em className="font-display italic text-text font-normal">lens.</em>
           </h3>
-          <div className="text-[14px] text-muted leading-relaxed max-w-lg mb-10 space-y-4">
+          <div className="text-[14px] text-muted leading-relaxed max-w-lg mb-10 space-y-4 font-equinox tracking-normal">
             <p>
               I am a passionate filmmaker, cinematographer, and editor dedicated to crafting visual stories that leave a lasting impact. My journey began with a fascination for how light, shadow, and movement can evoke deep emotions and tell compelling narratives.
             </p>
             <p>
-              Over the last six years, I've had the privilege of shooting and editing for a diverse range of clients, from commercial campaigns to intimate documentaries. I obsess over pacing, cinematic color grading, and finding the raw beauty in the moments between moments. Always ready to travel and bring unique visions to life, frame by frame.
+              Over the last six years, I&apos;ve had the privilege of shooting and editing for a diverse range of clients, from commercial campaigns to intimate documentaries. I obsess over pacing, cinematic color grading, and finding the raw beauty in the moments between moments. Always ready to travel and bring unique visions to life, frame by frame.
             </p>
           </div>
 

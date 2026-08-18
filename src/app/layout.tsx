@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Instrument_Serif } from "next/font/google";
+import localFont from 'next/font/local'
 import TimelineHUD from "@/components/TimelineHUD";
 import GlobalSweep from "@/components/GlobalSweep";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -14,6 +15,14 @@ const instrument = Instrument_Serif({
   weight: "400", 
   subsets: ["latin"],
   variable: "--font-instrument" 
+});
+const deltha = localFont({
+  src: '../../public/font/Deltha.ttf',
+  variable: '--font-deltha'
+});
+const equinox = localFont({
+  src: '../../public/font/Equinox-Typeface/Equinox_Typeface_Dfonts.org/Equinox Bold.otf',
+  variable: '--font-equinox'
 });
 
 export const metadata: Metadata = {
@@ -32,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-theme="dark">
-      <body className={`${inter.variable} ${instrument.variable} bg-bg text-text antialiased`}>
+      <body className={`${inter.variable} ${instrument.variable} ${deltha.variable} ${equinox.variable} bg-bg text-text antialiased font-deltha`}>
         <SmoothScrolling>
           <GlobalLoading />
           <TimelineHUD />

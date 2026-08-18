@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Upload, X, Film, CheckCircle2, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Film, CheckCircle2, AlertCircle } from 'lucide-react'
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'Fashion', 
   'Food', 
   'Cars', 
@@ -17,10 +17,12 @@ const CATEGORIES = [
   'Other'
 ]
 
-export default function VideoUploadForm() {
+export default function VideoUploadForm({ existingCategories = [] }: { existingCategories?: string[] }) {
+  const ALL_CATEGORIES = Array.from(new Set([...DEFAULT_CATEGORIES, ...existingCategories]))
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [category, setCategory] = useState(CATEGORIES[0])
+  const [category, setCategory] = useState(ALL_CATEGORIES[0])
+  const [isCustomCategory, setIsCustomCategory] = useState(false)
   const [caption, setCaption] = useState('')
   const [orientation, setOrientation] = useState('landscape')
   const [placement, setPlacement] = useState('work_page')
@@ -31,8 +33,20 @@ export default function VideoUploadForm() {
   const [isError, setIsError] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const xhrRef = useRef<XMLHttpRequest | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  const cancelUpload = () => {
+    if (xhrRef.current) {
+      xhrRef.current.abort()
+      xhrRef.current = null
+    }
+    setUploading(false)
+    setUploadProgress(0)
+    setMessage('Upload cancelled by user.')
+    setIsError(true)
+  }
 
   // Cleanup preview URL to prevent memory leaks
   useEffect(() => {
@@ -86,6 +100,7 @@ export default function VideoUploadForm() {
 
       const publicUrl = await new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
+        xhrRef.current = xhr
         
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -137,11 +152,12 @@ export default function VideoUploadForm() {
       // Reset form
       clearFile()
       setCaption('')
-      setCategory(CATEGORIES[0])
+      setCategory(ALL_CATEGORIES[0])
       
       router.refresh()
       
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       console.error("Upload error:", error)
       const errorText = error?.message || (typeof error === 'string' ? error : JSON.stringify(error))
       setMessage(`Upload failed: ${errorText}`)
@@ -242,22 +258,54 @@ export default function VideoUploadForm() {
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Category</label>
               <div className="relative">
-                <select 
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full appearance-none rounded-lg px-3 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium focus:border-white/30 focus:ring-1 focus:ring-white/30 outline-none transition-all cursor-pointer"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat} className="bg-[#111] text-white">
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg width="10" height="6" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
-                  </svg>
-                </div>
+                {!isCustomCategory ? (
+                  <>
+                    <select 
+                      value={category}
+                      onChange={(e) => {
+                        if (e.target.value === 'custom') {
+                          setIsCustomCategory(true);
+                          setCategory('');
+                        } else {
+                          setCategory(e.target.value);
+                        }
+                      }}
+                      className="w-full appearance-none rounded-lg px-3 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium focus:border-white/30 focus:ring-1 focus:ring-white/30 outline-none transition-all cursor-pointer"
+                    >
+                      {ALL_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat} className="bg-[#111]">{cat}</option>
+                      ))}
+                      <option value="custom" className="bg-[#111] italic text-purple-400">Custom...</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg width="10" height="6" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400" />
+                      </svg>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      placeholder="Enter custom category"
+                      className="w-full rounded-lg px-3 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium focus:border-white/30 focus:ring-1 focus:ring-white/30 outline-none transition-all"
+                      autoFocus
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setIsCustomCategory(false);
+                        setCategory(ALL_CATEGORIES[0]);
+                      }}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      title="Back to dropdown"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -337,6 +385,17 @@ export default function VideoUploadForm() {
               Processing...
             </span>
           </button>
+
+          {/* Cancel Button */}
+          {uploading && (
+            <button
+              type="button"
+              onClick={cancelUpload}
+              className="mt-3 w-full h-10 rounded-lg border border-red-500/30 text-red-400 font-medium hover:bg-red-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <X className="w-4 h-4" /> Cancel Upload
+            </button>
+          )}
 
         </div>
       </form>

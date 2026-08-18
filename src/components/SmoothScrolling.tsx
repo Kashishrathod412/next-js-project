@@ -6,6 +6,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 import { useEffect, useRef } from 'react';
 
 export default function SmoothScrolling({ children }: { children: React.ReactNode }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lenisRef = useRef<any>(null);
   
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function SmoothScrolling({ children }: { children: React.ReactNod
     }
   
     gsap.ticker.add(update);
+    gsap.ticker.lagSmoothing(0);
     lenisRef.current?.lenis?.on('scroll', ScrollTrigger.update);
   
     // Robust height recalculation for tablet/mobile views where dvh or late-mounting elements break scroll height

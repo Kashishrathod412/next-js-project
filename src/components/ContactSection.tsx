@@ -174,7 +174,7 @@ export default function ContactSection() {
 
           {/* Status Messages */}
           {isSuccess && (
-            <p className="text-green-500 text-xs mb-3">Message sent successfully! I'll get back to you soon.</p>
+            <p className="text-green-500 text-xs mb-3">Message sent successfully! I&apos;ll get back to you soon.</p>
           )}
           {errorMsg && (
             <p className="text-red-500 text-xs mb-3">{errorMsg}</p>

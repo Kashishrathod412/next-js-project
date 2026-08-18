@@ -11,7 +11,7 @@ const CanvasParticles = dynamic(() => import("./CanvasParticles"), { ssr: false 
 const CursorGlow = dynamic(() => import("./CursorGlow"), { ssr: false });
 
 // Magnetic Button Component
-function MagneticButton({ children, className, onClick }: any) {
+function MagneticButton({ children, className, onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const boundsRef = useRef<{left: number, top: number, width: number, height: number} | null>(null);
   const x = useMotionValue(0);
@@ -71,14 +71,17 @@ function AnimatedStat({ target, suffix, label }: { target: number, suffix: strin
   );
 }
 
-const CATEGORIES = ["ALL", "COMMERCIAL", "FASHION", "PRODUCT", "SOCIAL", "TRAVEL"];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function HeroSection({ initialReels = [] }: { initialReels?: any[] }) {
   const containerRef = useRef<HTMLElement>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeCategory, setActiveCategory] = useState("ALL");
+
   const [isMuted, setIsMuted] = useState(true);
   const [isSpread, setIsSpread] = useState(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -244,7 +247,10 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
             <div className="flex flex-col sm:flex-row gap-4 mb-16 lg:mb-20 pointer-events-auto">
               <div className="hero-btn-container opacity-0 hidden sm:block">
                 <MagneticButton>
-                  <div className="bg-white text-black text-[12px] font-semibold uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:scale-105 hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-white/10">
+                  <div 
+                    onClick={() => setIsSpread(true)}
+                    className="bg-white text-black text-[12px] font-semibold uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:scale-105 hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-white/10"
+                  >
                     Watch Showreel <span className="text-[14px]">→</span>
                   </div>
                 </MagneticButton>
@@ -371,9 +377,6 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
                           </div>
                           <div>
                             <h3 className="text-white font-medium text-lg mb-1 leading-tight drop-shadow-md">{reel.category}</h3>
-                            <p className="text-white/60 text-[10px] uppercase tracking-wider">
-                              {reel.created_at ? new Date(reel.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '0:45'}
-                            </p>
                           </div>
                         </div>
                       )}
