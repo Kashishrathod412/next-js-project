@@ -86,8 +86,11 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
   const [isSpread, setIsSpread] = useState(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  
   useEffect(() => {
     setIsMounted(true);
+    setIsMobile(window.innerWidth < 768);
   }, []);
 
   // Filter reels (using the dynamic data)
@@ -159,7 +162,10 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
     const tl = gsap.timeline({ delay: 0.4 });
 
     if (content) tl.to(content, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
-    if (words.length) tl.to(words, { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", stagger: 0.1 }, "-=0.5");
+    if (words.length) {
+      gsap.set(words, { y: 32, opacity: 0 });
+      tl.to(words, { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", stagger: 0.1 }, "-=0.5");
+    }
     if (btns.length) tl.fromTo(btns, 
       { y: 24, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.7, ease: "power2.out", stagger: 0.1 }, 
@@ -194,9 +200,9 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
 
         <CanvasParticles />
 
-        {/* Film Grain - disabled mix-blend-overlay on mobile for performance */}
+        {/* Film Grain */}
         <div 
-          className="absolute inset-0 z-[3] opacity-[0.03] md:opacity-[0.05] pointer-events-none md:mix-blend-overlay"
+          className="absolute inset-0 z-[3] opacity-[0.03] md:opacity-[0.05] pointer-events-none mix-blend-overlay transform-gpu"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
         />
 
@@ -226,13 +232,13 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
             </div>
 
             <h1 className="text-[clamp(44px,6vw,84px)] font-medium leading-[1.0] tracking-tight mb-8">
-              <div className="overflow-hidden">
-                <span className="hero-word inline-block opacity-0 translate-y-8 text-text">
+              <div className="overflow-hidden pt-2 pb-2">
+                <span className="hero-word inline-block opacity-0 text-text">
                   Frames that
                 </span>
               </div>
-              <div className="overflow-hidden">
-                <span className="hero-word inline-block opacity-0 translate-y-8 font-display italic text-text/80 pr-4">
+              <div className="overflow-hidden pb-4">
+                <span className="hero-word inline-block opacity-0 font-display italic text-text/80 pr-4">
                   move people.
                 </span>
               </div>
@@ -317,7 +323,7 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
                         x: isActive ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? centerOffset : 0) : isSpread ? spreadX : 0,
                         scale: isActive ? 1.2 : isHovered && !isSpread ? stackScale * 1.05 : isSpread ? 0.9 : stackScale,
                         rotateZ: isActive ? 0 : isSpread ? spreadRotate : index % 2 === 0 ? 2 : -2,
-                        filter: isAnotherActive ? 'blur(10px) brightness(0.4)' : isHovered ? 'brightness(1.2)' : 'brightness(1)',
+                        filter: isAnotherActive ? (isMobile ? 'brightness(0.4)' : 'blur(10px) brightness(0.4)') : isHovered ? 'brightness(1.2)' : 'brightness(1)',
                       }}
                       exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
                       transition={{ 

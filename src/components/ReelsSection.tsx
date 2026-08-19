@@ -202,8 +202,11 @@ export default function ReelsSection() {
   const [hovered, setHovered] = useState(false);
   const [clickable, setClickable] = useState(true);
 
-  // Responsive: Always use 3 slots to allow for side-card peeking, but we change the item width below.
+  // Responsive: Use 5 slots on desktop to make cards smaller, 3 on mobile/tablet.
   const getVisibleCount = () => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 1024 ? 5 : 3;
+    }
     return 3;
   };
 
@@ -221,13 +224,20 @@ export default function ReelsSection() {
       }
     });
     ro.observe(trackRef.current);
-    return () => ro.disconnect();
+    
+    const handleResize = () => setVisibleCount(getVisibleCount());
+    window.addEventListener("resize", handleResize);
+    
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const itemWidth = trackWidth > 0
     ? trackWidth < 640 
       ? trackWidth * 0.62 // Decreased to 62% to make the card shorter and fit better on mobile screens
-      : (trackWidth - GAP * (visibleCount - 1)) / visibleCount // Desktop behavior
+      : Math.min((trackWidth - GAP * (visibleCount - 1)) / visibleCount, 300) // Desktop behavior - capped to avoid being too large
     : 200;
 
   const centerSlot = Math.floor(visibleCount / 2);

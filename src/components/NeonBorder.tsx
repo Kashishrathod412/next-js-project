@@ -34,6 +34,9 @@ const GLOW_LAYERS = [
     { blur: 15, opacity: 0.3, reach: 0.6 },
     { blur: 57, opacity: 0.18, reach: 1 },
 ];
+const MOBILE_GLOW_LAYERS = [
+    { blur: 15, opacity: 0.4, reach: 0.6 },
+];
 const MAX_GLOW_BLUR = Math.max(...GLOW_LAYERS.map((l) => l.blur));
 const MAX_GLOW_REACH = 36;
 
@@ -93,7 +96,8 @@ function buildArc(
     lengthPct: number,
     w: number,
     h: number,
-    color: string
+    color: string,
+    isMobile: boolean = false
 ) {
     const fw = w > 0 ? w : 100;
     const fh = h > 0 ? h : 100;
@@ -107,8 +111,9 @@ function buildArc(
     let prev = 0;
     let acc = 0;
 
-    for (let i = 0; i <= ARC_SAMPLES; i++) {
-        const f = i / ARC_SAMPLES;
+    const arcSamples = isMobile ? 12 : ARC_SAMPLES;
+    for (let i = 0; i <= arcSamples; i++) {
+        const f = i / arcSamples;
         const angle = perimeterAngle(lap + (f - 0.5) * span, fw, fh);
         if (i === 0) {
             base = angle;
@@ -200,8 +205,10 @@ function __OriginkitBase_NeonBorder(props: Props) {
     const rootRef = useRef<HTMLDivElement>(null);
     const sizeRef = useRef({ w: 0, h: 0 });
     const [size, setSize] = useState({ w: 0, h: 0 });
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
+        setIsMobile(window.innerWidth < 768);
         const el = rootRef.current;
         if (!el || typeof ResizeObserver === "undefined") return;
         const ro = new ResizeObserver(() => {
@@ -254,17 +261,18 @@ function __OriginkitBase_NeonBorder(props: Props) {
                 lap = from + (to - from) * eased;
 
                 const a = groupARef.current;
+                const _isMobile = typeof window !== "undefined" && window.innerWidth < 768;
                 if (a) {
                     a.style.setProperty(
                         "--arc",
-                        buildArc(lap, p.borderSize, w, h, p.color)
+                        buildArc(lap, p.borderSize, w, h, p.color, _isMobile)
                     );
                 }
                 const b = groupBRef.current;
                 if (b) {
                     b.style.setProperty(
                         "--arc",
-                        buildArc(lap + 0.5, p.borderSize, w, h, p.color)
+                        buildArc(lap + 0.5, p.borderSize, w, h, p.color, _isMobile)
                     );
                 }
             }
@@ -278,9 +286,7 @@ function __OriginkitBase_NeonBorder(props: Props) {
 
     const thick = Math.max(1, Math.min(10, thickness));
 
-    const radius =
-        (Math.max(0, Math.min(100, rounded)) / 100) *
-        (Math.min(size.w, size.h) / 2);
+    const radius = rounded;
 
     const amount = Math.max(0, Math.min(100, glow)) / 100;
 
@@ -335,15 +341,15 @@ function __OriginkitBase_NeonBorder(props: Props) {
                     inset: 0,
                     overflow: "visible",
                     pointerEvents: "none",
-                    "--arc": buildArc(start, borderSize, size.w, size.h, color),
+                    "--arc": buildArc(start, borderSize, size.w, size.h, color, isMobile),
                 } as React.CSSProperties
             }
         >
             {amount > 0 &&
-                GLOW_LAYERS.map((l, i) =>
+                (isMobile ? MOBILE_GLOW_LAYERS : GLOW_LAYERS).map((l, i) =>
                     glowLayer(`glow-${i}`, ringAt(l.reach), l.blur, l.opacity)
                 )}
-            {Array.from({ length: EDGE_COPIES }).map((_, i) => (
+            {Array.from({ length: isMobile ? 1 : EDGE_COPIES }).map((_, i) => (
                 <div
                     key={`edge-${i}`}
                     style={{

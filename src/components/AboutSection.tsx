@@ -120,7 +120,9 @@ export default function AboutSection() {
           <img 
             src="/bts-bg.png" 
             alt="BTS Background" 
-            className="w-full h-full object-cover" 
+            className="w-full h-full object-cover"
+            fetchPriority="high"
+            decoding="async" 
           />
         </div>
       </motion.div>
@@ -137,6 +139,8 @@ export default function AboutSection() {
               src="/IMG_6180 8.JPG" 
               alt="My Profile" 
               className="w-full h-full object-cover transition-all duration-700"
+              fetchPriority="high"
+              decoding="async"
             />
           </div>
         </div>
