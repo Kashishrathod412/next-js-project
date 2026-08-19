@@ -202,10 +202,9 @@ export default function ReelsSection() {
   const [hovered, setHovered] = useState(false);
   const [clickable, setClickable] = useState(true);
 
-  // Responsive: Use 5 slots on desktop to make cards smaller, 3 on mobile/tablet.
   const getVisibleCount = () => {
     if (typeof window !== "undefined") {
-      return window.innerWidth >= 1024 ? 5 : 3;
+      return window.innerWidth >= 768 ? 5 : 3;
     }
     return 3;
   };
@@ -236,8 +235,8 @@ export default function ReelsSection() {
 
   const itemWidth = trackWidth > 0
     ? trackWidth < 640 
-      ? trackWidth * 0.62 
-      : Math.min((trackWidth - GAP * (visibleCount - 1)) / visibleCount, 200) 
+      ? trackWidth * 0.62 // Decreased to 62% to make the card shorter and fit better on mobile screens
+      : Math.min((trackWidth - GAP * (visibleCount - 1)) / visibleCount, 220) // Desktop behavior - capped to 220px to prevent huge height
     : 200;
 
   const centerSlot = Math.floor(visibleCount / 2);
