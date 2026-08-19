@@ -4,6 +4,7 @@ import { Film } from 'lucide-react'
 
 import DeleteVideoButton from '@/components/admin/DeleteVideoButton'
 import EditableCaption from '@/components/admin/EditableCaption'
+import EditableCategory from '@/components/admin/EditableCategory'
 import SignOutButton from '@/components/admin/SignOutButton'
 
 // Disable caching for this route so uploaded videos appear immediately
@@ -86,9 +87,7 @@ export default async function AdminDashboard() {
                       />
                       
                       {/* Category Badge */}
-                      <div className="absolute top-3 left-3 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-semibold tracking-wider uppercase text-white/90 border border-white/10 shadow-xl">
-                        {video.category}
-                      </div>
+                      <EditableCategory id={video.id} initialCategory={video.category} categories={uniqueCategories} />
                       
                       {/* Placement Badge */}
                       <div className="absolute top-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-md text-[10px] font-semibold tracking-wider uppercase text-white/90 border border-white/10 shadow-xl">

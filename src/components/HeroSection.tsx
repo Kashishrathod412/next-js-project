@@ -182,21 +182,21 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
         <div className="absolute inset-0 z-[1] bg-gradient-to-r from-bg via-bg/80 to-transparent pointer-events-none" />
         <div className="absolute inset-0 z-[1] bg-gradient-to-b from-transparent via-transparent to-bg pointer-events-none" />
         
-        {/* Depth Layers / Glows */}
+        {/* Depth Layers / Glows - Hidden on mobile to improve scroll performance */}
         <motion.div 
           style={{ x: useTransform(mouseX, [-500, 500], [-20, 20]), y: useTransform(mouseY, [-500, 500], [-20, 20]) }}
-          className="absolute top-[10%] right-[15%] w-[500px] h-[500px] bg-[#8b5cf6] blur-[120px] opacity-10 rounded-full pointer-events-none z-[1]" 
+          className="absolute top-[10%] right-[15%] w-[500px] h-[500px] bg-[#8b5cf6] blur-[120px] opacity-10 rounded-full pointer-events-none z-[1] hidden md:block" 
         />
         <motion.div 
           style={{ x: useTransform(mouseX, [-500, 500], [30, -30]), y: useTransform(mouseY, [-500, 500], [30, -30]) }}
-          className="absolute bottom-[10%] left-[20%] w-[600px] h-[400px] bg-[#8b5cf6] blur-[140px] opacity-[0.08] rounded-full pointer-events-none z-[1]" 
+          className="absolute bottom-[10%] left-[20%] w-[600px] h-[400px] bg-[#8b5cf6] blur-[140px] opacity-[0.08] rounded-full pointer-events-none z-[1] hidden md:block" 
         />
 
         <CanvasParticles />
 
-        {/* Film Grain */}
+        {/* Film Grain - disabled mix-blend-overlay on mobile for performance */}
         <div 
-          className="absolute inset-0 z-[3] opacity-[0.05] pointer-events-none mix-blend-overlay"
+          className="absolute inset-0 z-[3] opacity-[0.03] md:opacity-[0.05] pointer-events-none md:mix-blend-overlay"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
         />
 
@@ -265,7 +265,7 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
               </div>
             </div>
 
-            <div className="flex flex-row justify-between w-full sm:w-auto sm:justify-start sm:gap-12 pointer-events-auto">
+            <div className="flex flex-row justify-start gap-8 sm:gap-12 w-full sm:w-auto pointer-events-auto">
               <AnimatedStat target={120} suffix="+" label="Projects Delivered" />
               <AnimatedStat target={6} suffix="+" label="Years Experience" />
             </div>
@@ -323,8 +323,8 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
                       transition={{ 
                         type: "spring", 
                         stiffness: 120, 
-                        damping: 18,
-                        mass: 1.2,
+                        damping: 20,
+                        mass: 1,
                         opacity: { duration: 0.3 },
                         delay: isActive ? 0 : index * 0.05 
                       }}

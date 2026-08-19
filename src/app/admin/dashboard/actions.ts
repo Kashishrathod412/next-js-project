@@ -110,3 +110,30 @@ export async function updateVideoCaption(id: string, caption: string) {
     return { success: false, error: err.message || 'Unknown server error' }
   }
 }
+
+export async function updateVideoCategory(id: string, category: string) {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('videos')
+      .update({ category })
+      .eq('id', id)
+      .select()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    if (!data || data.length === 0) {
+      return { success: false, error: 'No video was updated. This might be a database permissions (RLS) issue.' }
+    }
+
+    revalidatePath('/', 'layout')
+    return { success: true }
+  } catch (error) {
+    const err = error as Error
+    console.error('Exception updating video category:', err)
+    return { success: false, error: err.message || 'Unknown server error' }
+  }
+}
+

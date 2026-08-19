@@ -26,7 +26,13 @@ export default async function WorkPage() {
     return acc;
   }, {});
 
-  const categories = Object.keys(groupedVideos).sort();
+  const categories = Object.keys(groupedVideos).sort((a, b) => {
+    // Sort by number of videos descending
+    const diff = groupedVideos[b].length - groupedVideos[a].length;
+    if (diff !== 0) return diff;
+    // Fall back to alphabetical sort
+    return a.localeCompare(b);
+  });
 
   return (
     <main className="min-h-screen text-text pt-20 sm:pt-24 pb-32 relative overflow-hidden">
@@ -49,7 +55,7 @@ export default async function WorkPage() {
               <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
               Back to Home
             </Link>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-7xl font-deltha tracking-tight mb-4 whitespace-nowrap uppercase">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-7xl font-deltha tracking-tight mb-4 whitespace-normal sm:whitespace-nowrap uppercase">
               Selected <span className="text-muted">Work.</span>
             </h1>
             <p className="text-muted max-w-md text-sm md:text-base leading-relaxed font-equinox tracking-wide uppercase">

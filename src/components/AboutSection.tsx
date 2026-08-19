@@ -11,6 +11,8 @@ import {
   Palette, 
   AudioWaveform
 } from "lucide-react";
+import NeonBorder from "./NeonBorder";
+import VaporizeTextCycle from "./VaporizeTextCycle";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,8 +32,14 @@ export default function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
   
   const [isMobile, setIsMobile] = useState(false);
+  const [delthaFont, setDelthaFont] = useState("sans-serif");
+  const dummyFontRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setIsMobile(window.innerWidth < 640);
+    if (dummyFontRef.current) {
+      setDelthaFont(window.getComputedStyle(dummyFontRef.current).fontFamily);
+    }
   }, []);
 
   // Parallax setup
@@ -48,17 +56,18 @@ export default function AboutSection() {
 
     const contentDiv = sectionRef.current.querySelector('.about-content');
     if (contentDiv) {
-      gsap.set(contentDiv, { willChange: "filter, transform" });
+      const isMobileDevice = window.innerWidth < 768;
+      gsap.set(contentDiv, { willChange: "transform, opacity" });
       const contentTween = gsap.fromTo(contentDiv,
         { 
           y: 30, 
           opacity: 0.7, 
-          filter: "blur(8px)" 
+          filter: isMobileDevice ? "none" : "blur(8px)" 
         },
         {
           y: 0,
           opacity: 1,
-          filter: "blur(0px)",
+          filter: isMobileDevice ? "none" : "blur(0px)",
           duration: 1.0,
           ease: "power2.out",
           onComplete: () => { (contentDiv as HTMLElement).style.willChange = "auto"; },
@@ -119,12 +128,17 @@ export default function AboutSection() {
       <div className="about-content grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[320px_1fr] gap-12 lg:gap-20 items-center relative z-10 max-w-[1200px] mx-auto">
         
         {/* Left Column: Profile Photo */}
-        <div className="w-full aspect-[4/5] border border-stroke rounded-2xl relative overflow-hidden group">
-          <img 
-            src="/IMG_6180 8.JPG" 
-            alt="My Profile" 
-            className="w-full h-full object-cover transition-all duration-700"
-          />
+        <div className="w-full aspect-[4/5] relative group rounded-2xl">
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <NeonBorder color="#8b5cf6" rounded={16} thickness={2} borderSize={40} glow={70} />
+          </div>
+          <div className="w-full h-full rounded-2xl relative z-10 overflow-hidden bg-surface">
+            <img 
+              src="/IMG_6180 8.JPG" 
+              alt="My Profile" 
+              className="w-full h-full object-cover transition-all duration-700"
+            />
+          </div>
         </div>
 
 
@@ -140,9 +154,21 @@ export default function AboutSection() {
           <p className="text-[10px] uppercase tracking-[0.12em] text-faint mb-4 font-sans">
             About Me
           </p>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-text mb-2">
-            Dhruvil Naidu
-          </h2>
+          <div ref={dummyFontRef} className="font-deltha hidden" />
+          <div className="h-[40px] md:h-[48px] w-full mb-2 z-10 relative">
+            <VaporizeTextCycle 
+              texts={["Filmmaker", "Editor", "Dhruvil Naidu"]} 
+              loop={false}
+              font={{ 
+                fontFamily: delthaFont, 
+                fontWeight: 600, 
+                fontSize: isMobile ? 32 : 44 
+              }}
+              alignment="left"
+              color="#ededed"
+              spread={15}
+            />
+          </div>
           <h3 className="text-4xl md:text-5xl font-medium tracking-tight text-text/90 mb-6">
             6 years behind the{" "}
             <em className="font-display italic text-text font-normal">lens.</em>

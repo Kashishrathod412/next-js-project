@@ -31,6 +31,7 @@
     "rxjs": "^7.8.2",
     "sanity": "^6.9.2",
     "sanity-plugin-cloudinary": "^2.1.2",
+    "smooth-loader": "^1.2.4",
     "styled-components": "^6.5.2"
   },
   "devDependencies": {
