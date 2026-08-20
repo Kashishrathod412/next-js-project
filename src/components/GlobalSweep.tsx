@@ -18,9 +18,9 @@ export default function GlobalSweep() {
     const layers = sweepRef.current.querySelectorAll('.sweep-layer');
     
     gsap.fromTo(layers,
-      { x: "-20vw" },
+      { x: "-50vw" },
       {
-        x: "120vw",
+        x: "180vw",
         duration: 18,
         ease: "none",
         repeat: -1,

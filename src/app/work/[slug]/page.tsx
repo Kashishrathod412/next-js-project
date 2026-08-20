@@ -168,6 +168,8 @@ export default function CaseStudyPage({ params }: CaseStudyProps) {
                 playsInline
                 preload="none"
                 controls={isPlaying}
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
                 className="absolute inset-0 w-full h-full object-contain"
                 onEnded={() => setIsPlaying(false)}
                 onPause={() => setIsPlaying(false)}

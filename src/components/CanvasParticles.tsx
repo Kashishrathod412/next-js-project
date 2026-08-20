@@ -21,8 +21,8 @@ export default function CanvasParticles() {
       y: Math.random() * h,
       vx: (Math.random() - 0.5) * 0.4,
       vy: (Math.random() - 0.5) * 0.4,
-      r: 0.2 + Math.random() * 1.5,
-      a: 0.02 + Math.random() * 0.15,
+      r: 0.5 + Math.random() * 2,
+      a: 0.3 + Math.random() * 0.5,
       isDust: Math.random() > 0.8
     }));
 
@@ -54,8 +54,19 @@ export default function CanvasParticles() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        
+        // Add glow effect only on desktop for performance
+        if (!isMobile) {
+          ctx.shadowBlur = p.r * 4;
+          ctx.shadowColor = p.isDust ? `rgba(139, 92, 246, ${p.a})` : `rgba(255, 255, 255, ${p.a})`;
+        } else {
+          ctx.shadowBlur = 0;
+        }
+        
         ctx.fillStyle = p.isDust ? `rgba(139, 92, 246, ${p.a})` : `rgba(255, 255, 255, ${p.a})`;
         ctx.fill();
+        
+        // Reset shadow for performance on next iterations if needed (though it gets overwritten)
       });
 
       const gradient = ctx.createRadialGradient(

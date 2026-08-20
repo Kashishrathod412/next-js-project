@@ -61,6 +61,8 @@ function WorkCard({ project, isCenter, onClickCard }: { project: any, isCenter: 
             playsInline
             loop
             controls={isPlaying}
+            controlsList="nodownload"
+            onContextMenu={(e) => e.preventDefault()}
             onClick={(e) => {
               if (isPlaying) e.stopPropagation();
             }}

@@ -161,6 +161,8 @@ function LocalSlide({ src, isActive }: { src: string; isActive: boolean }) {
         src={src}
         playsInline
         controls={isPlaying}
+        controlsList="nodownload"
+        onContextMenu={(e) => e.preventDefault()}
         preload="metadata"
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100 z-30 bg-black' : 'opacity-60'}`}
         onEnded={() => setIsPlaying(false)}

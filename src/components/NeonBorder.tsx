@@ -228,14 +228,27 @@ function __OriginkitBase_NeonBorder(props: Props) {
         let lap = 0;
         let corner = 0;
         let stepT = 0;
+        let hasDrawnStatic = false;
 
         const frame = (now: number) => {
             const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
             last = now;
             const p = live.current;
             const s = Math.max(0, Math.min(20, p.speed));
+            
+            const _isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
-            if (s > 0) {
+            if (_isMobile) {
+                if (!hasDrawnStatic && sizeRef.current.w > 0) {
+                    const { w, h } = sizeRef.current;
+                    const a = groupARef.current;
+                    if (a) a.style.setProperty("--arc", buildArc(0, p.borderSize, w, h, p.color, true));
+                    const b = groupBRef.current;
+                    if (b) b.style.setProperty("--arc", buildArc(0.5, p.borderSize, w, h, p.color, true));
+                    hasDrawnStatic = true;
+                }
+            } else if (s > 0) {
+                hasDrawnStatic = false;
                 const step = p.movement === "step";
                 const beat = step
                     ? SLOWEST_STEP +

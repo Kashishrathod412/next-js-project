@@ -364,6 +364,8 @@ export default function HeroSection({ initialReels = [] }: { initialReels?: any[
                           loop
                           muted={isActive ? isMuted : true}
                           playsInline
+                          controlsList="nodownload"
+                          onContextMenu={(e) => e.preventDefault()}
                           className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${isActive ? 'opacity-100 scale-100' : 'opacity-50 scale-105'}`}
                         />
                       )}

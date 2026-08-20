@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import NeonBorder from "./NeonBorder";
 import VaporizeTextCycle from "./VaporizeTextCycle";
+import TiltedCard from "./TiltedCard";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -134,13 +135,20 @@ export default function AboutSection() {
           <div className="absolute inset-0 z-20 pointer-events-none">
             <NeonBorder color="#8b5cf6" rounded={16} thickness={2} borderSize={40} glow={70} />
           </div>
-          <div className="w-full h-full rounded-2xl relative z-10 overflow-hidden bg-surface">
-            <img 
-              src="/dhruvil img.webp" 
-              alt="My Profile" 
-              className="w-full h-full object-cover transition-all duration-700"
-              fetchPriority="high"
-              decoding="async"
+          <div className="w-full h-full rounded-2xl relative z-10">
+            <TiltedCard
+              imageSrc="/dhruvil img.webp"
+              altText="My Profile"
+              captionText="Dhruvil Naidu"
+              containerHeight="100%"
+              containerWidth="100%"
+              imageHeight="100%"
+              imageWidth="100%"
+              rotateAmplitude={12}
+              scaleOnHover={1.05}
+              showMobileWarning={false}
+              showTooltip={true}
+              displayOverlayContent={false}
             />
           </div>
         </div>

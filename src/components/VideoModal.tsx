@@ -83,6 +83,8 @@ export default function VideoModal({ isOpen, onClose, videoUrl }: VideoModalProp
               <video
                 ref={videoRef}
                 controls
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full h-full object-cover"
               />
             ) : (

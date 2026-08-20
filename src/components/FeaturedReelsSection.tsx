@@ -112,6 +112,8 @@ export default function FeaturedReelsSection() {
                       muted
                       loop
                       playsInline
+                      controlsList="nodownload"
+                      onContextMenu={(e) => e.preventDefault()}
                       className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${isHovered || isPlaying ? 'opacity-100 scale-100' : 'opacity-60 scale-105'}`}
                     />
                   )}
