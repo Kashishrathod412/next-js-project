@@ -136,7 +136,7 @@ export default function AboutSection() {
           </div>
           <div className="w-full h-full rounded-2xl relative z-10 overflow-hidden bg-surface">
             <img 
-              src="/IMG_6180 8.JPG" 
+              src="/dhruvil img.webp" 
               alt="My Profile" 
               className="w-full h-full object-cover transition-all duration-700"
               fetchPriority="high"

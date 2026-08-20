@@ -42,20 +42,13 @@ export default function TimelineHUD() {
     setMounted(true);
   }, []);
 
-  // Scene definitions per route
-  const getScenesForRoute = () => {
+  // Scene definitions per route (initial static ones)
+  const getInitialScenesForRoute = () => {
     if (pathname === "/") {
       return [
         { id: "hero", label: "01 HOME" },
         { id: "about", label: "02 ABOUT" },
         { id: "contact", label: "03 CONTACT" },
-      ];
-    } else if (pathname === "/work") {
-      return [
-        { id: "work-list-fashion & events", label: "01 FASHION" },
-        { id: "work-list-food & beverage", label: "02 FOOD" },
-        { id: "work-list-automotive", label: "03 AUTO" },
-        { id: "work-list-commercial & brand", label: "04 BRAND" },
       ];
     } else if (pathname.startsWith("/work/")) {
       return [
@@ -66,7 +59,39 @@ export default function TimelineHUD() {
     return [];
   };
 
-  const scenes = getScenesForRoute();
+  const [scenes, setScenes] = useState<{id: string, label: string}[]>(getInitialScenesForRoute());
+
+  // Dynamically find scenes on the /work page by querying the DOM
+  useEffect(() => {
+    if (pathname === "/work") {
+      const findWorkScenes = () => {
+        const sections = document.querySelectorAll('section[id^="work-list-"]');
+        if (sections.length > 0) {
+          const dynamicScenes = Array.from(sections).map((section, index) => {
+            const id = section.id;
+            // Extract the original title from the section's h2 if possible, or just parse it from ID
+            const heading = section.querySelector('h2');
+            let name = heading ? heading.textContent?.trim() : id.replace("work-list-", "");
+            if (name) name = name.toUpperCase();
+            return { id, label: `0${index + 1} ${name}` };
+          });
+          setScenes(dynamicScenes);
+          return true;
+        }
+        return false;
+      };
+
+      // Try immediately, and retry a few times to allow for DOM rendering
+      if (!findWorkScenes()) {
+        const interval = setInterval(() => {
+          if (findWorkScenes()) clearInterval(interval);
+        }, 100);
+        setTimeout(() => clearInterval(interval), 2000); // Stop trying after 2 seconds
+      }
+    } else {
+      setScenes(getInitialScenesForRoute());
+    }
+  }, [pathname]);
 
   const getAbsoluteY = (id: string) => {
     const el = typeof document !== 'undefined' ? document.getElementById(id) : null;
@@ -83,12 +108,9 @@ export default function TimelineHUD() {
         about: getAbsoluteY("about") || scrollMax * 0.25,
         contact: getAbsoluteY("contact") || scrollMax * 0.85,
         bts: getAbsoluteY("bts-grid") || scrollMax * 0.5,
-        workSections: [
-          getAbsoluteY("work-list-fashion & events") || 0,
-          getAbsoluteY("work-list-food & beverage") || scrollMax * 0.25,
-          getAbsoluteY("work-list-automotive") || scrollMax * 0.5,
-          getAbsoluteY("work-list-commercial & brand") || scrollMax * 0.75,
-        ],
+        workSections: pathname === "/work" && scenes.length > 0 
+          ? scenes.map(scene => getAbsoluteY(scene.id) || 0)
+          : [], // Only needed for /work
         maxScroll: scrollMax > 0 ? scrollMax : 1,
       };
     };
@@ -103,7 +125,7 @@ export default function TimelineHUD() {
       window.removeEventListener("resize", measure);
       clearTimeout(timer);
     };
-  }, [pathname]);
+  }, [pathname, scenes]);
 
   // Track scroll and calculate scrollProgress + timecode + active scene
   useEffect(() => {
@@ -119,11 +141,7 @@ export default function TimelineHUD() {
       const offsets = offsetsRef.current;
 
       if (pathname === "/") {
-        // Homepage interpolation targets:
-        // Hero top (y=0) -> 00:00:00:00 (0 frames)
-        // About top (y=yAbout) -> 00:00:45:12 (1092 frames)
-        // Contact top (y=yContact) -> 00:03:15:10 (4690 frames)
-        // Page End (y=maxScroll) -> 00:03:30:00 (5040 frames)
+        // Homepage interpolation targets
         const fHero = 0;
         const fAbout = 1092;
         const fContact = 4690;
@@ -150,11 +168,19 @@ export default function TimelineHUD() {
         calculatedFrames = fWorkStart + ratio * (fWorkEnd - fWorkStart);
         
         activeIdx = 0;
+        // Trigger point is slightly below center of the screen
+        const triggerY = y + window.innerHeight * 0.6; 
+        
         for (let i = offsets.workSections.length - 1; i >= 0; i--) {
-           if (y >= offsets.workSections[i] - 300) {
+           if (triggerY >= offsets.workSections[i]) {
               activeIdx = i;
               break;
            }
+        }
+
+        // Force last index if we reached the absolute bottom of the page
+        if (maxScroll > 0 && y >= maxScroll - 20) {
+            activeIdx = offsets.workSections.length - 1;
         }
       } else if (pathname.startsWith("/work/")) {
         // Case Study Page:
@@ -257,9 +283,17 @@ export default function TimelineHUD() {
             {scenes.map((scene, i) => {
               const maxScroll = offsetsRef.current?.maxScroll || 1;
               const absY = getAbsoluteY(scene.id);
-              const percent = maxScroll > 0 ? (absY / maxScroll) * 100 : 0;
               
-              if (percent === 0 && i !== 0) return null; // hide if not found
+              // Calculate the scroll position at which this section becomes active
+              const triggerScrollY = typeof window !== 'undefined' ? absY - window.innerHeight * 0.6 : absY - 500;
+              
+              // Map that scroll position to a percentage on the timeline track
+              let percent = maxScroll > 0 ? (triggerScrollY / maxScroll) * 100 : 0;
+              
+              // Ensure it stays between 0 and 100%
+              percent = Math.max(0, Math.min(100, percent));
+              
+              if (percent === 0 && i !== 0) return null; // hide if not found or somehow negative
               
               return (
                 <div 
