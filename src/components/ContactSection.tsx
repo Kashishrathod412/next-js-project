@@ -13,6 +13,7 @@ export default function ContactSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [projectType, setProjectType] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +33,7 @@ export default function ContactSection() {
       
       // Reset success message after 5 seconds
       setTimeout(() => setIsSuccess(false), 5000);
+      setProjectType("");
     } catch (err) {
       console.error(err);
       setErrorMsg("Failed to send message. Please try again.");
@@ -110,9 +112,6 @@ export default function ContactSection() {
             {"Let's"} make something{" "}
             <em className="font-display italic text-text">real.</em>
           </h2>
-          <p className="text-[14px] text-muted">
-            Available from October 2026 onwards.
-          </p>
         </div>
 
         <form className="flex flex-col" onSubmit={handleSubmit}>
@@ -151,12 +150,41 @@ export default function ContactSection() {
             <label className="block text-[10px] uppercase text-faint mb-1">
               Project type
             </label>
-            <input
-              type="text"
-              name="project_type"
-              placeholder="Commercial, Wedding, Music Video..."
-              className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost"
-            />
+            {projectType !== "Custom" ? (
+              <select
+                name="project_type"
+                value={projectType}
+                onChange={(e) => setProjectType(e.target.value)}
+                className="bg-transparent text-text/70 text-[13px] outline-none w-full appearance-none cursor-pointer"
+                required
+              >
+                <option value="" disabled className="bg-bg text-text/70">Select a project type</option>
+                <option value="Commercial" className="bg-bg text-text/70">Commercial</option>
+                <option value="Brand" className="bg-bg text-text/70">Brand</option>
+                <option value="Corporate" className="bg-bg text-text/70">Corporate</option>
+                <option value="Real Estate" className="bg-bg text-text/70">Real Estate</option>
+                <option value="Short Film" className="bg-bg text-text/70">Short Film</option>
+                <option value="Custom" className="bg-bg text-text/70">Other (Custom)</option>
+              </select>
+            ) : (
+              <div className="flex gap-2 items-center w-full">
+                <input
+                  type="text"
+                  name="project_type"
+                  autoFocus
+                  placeholder="Type your custom project type..."
+                  className="bg-transparent text-text/70 text-[13px] outline-none w-full placeholder:text-ghost flex-1"
+                  required
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setProjectType("")}
+                  className="text-[10px] text-muted hover:text-text uppercase tracking-wider px-2 border border-stroke rounded bg-surface hover:bg-white/5 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Message */}
