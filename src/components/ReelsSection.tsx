@@ -238,7 +238,7 @@ export default function ReelsSection() {
   const itemWidth = trackWidth > 0
     ? trackWidth < 640 
       ? trackWidth * 0.62 // Decreased to 62% to make the card shorter and fit better on mobile screens
-      : Math.min((trackWidth - GAP * (visibleCount - 1)) / visibleCount, 180) // Desktop behavior - capped to 180px to prevent huge height
+      : (trackWidth - GAP * (visibleCount - 1)) / visibleCount // Desktop behavior - use available width
     : 200;
 
   const centerSlot = Math.floor(visibleCount / 2);

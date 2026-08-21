@@ -288,7 +288,7 @@ export default function WorkSection({ title, projects, sceneNumber }: { title: s
           <div className="w-[10vw] sm:w-[20vw] md:w-[calc(50%-180px)] shrink-0 pointer-events-none" />
           
           {projects.map((project, index) => (
-            <div key={project.id} className={`card-wrapper shrink-0 snap-center transition-all duration-500 ${project.orientation === 'vertical' ? 'w-[55vw] sm:w-[40vw] md:w-[240px]' : 'w-[70vw] sm:w-[50vw] md:w-[360px]'}`}>
+            <div key={project.id} className={`card-wrapper shrink-0 snap-center transition-all duration-500 ${project.orientation === 'vertical' ? 'w-[65vw] sm:w-[40vw] md:w-[240px]' : 'w-[85vw] sm:w-[50vw] md:w-[360px]'}`}>
               <WorkCard project={project} isCenter={activeIndex === index} onClickCard={() => scrollToCard(index)} />
             </div>
           ))}

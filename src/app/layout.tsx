@@ -8,6 +8,7 @@ import SmoothScrolling from "@/components/SmoothScrolling";
 import GlobalLoading from "@/components/GlobalLoading";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import InstagramButton from "@/components/InstagramButton";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -53,6 +54,7 @@ export default function RootLayout({
               {children}
             </ErrorBoundary>
           </div>
+          <SpeedInsights />
         </SmoothScrolling>
       </body>
     </html>
